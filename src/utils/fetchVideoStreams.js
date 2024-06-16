@@ -1,3 +1,5 @@
+// This is not a part of the main application, but it wil be next time i update the main application
+
 const axios = require('axios');
 const base64 = require('base-64');
 const m3u8Parser = require('m3u8-parser');
