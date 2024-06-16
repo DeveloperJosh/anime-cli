@@ -1,0 +1,21 @@
+{
+  "name": "anime-video-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "bin": {
+    "anime-cli": "./src/main.js"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "base-64": "^1.0.0",
+    "cheerio": "^1.0.0-rc.5",
+    "child_process": "^1.0.2",
+    "commander": "^8.0.0",
+    "inquirer": "^8.2.6",
+    "inquirer-autocomplete-prompt": "^1.0.3",
+    "m3u8-parser": "^7.1.0",
+    "open": "^10.1.0",
+    "ora": "^5.4.1"
+  }
+}
