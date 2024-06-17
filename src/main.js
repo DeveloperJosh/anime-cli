@@ -7,9 +7,9 @@ const fetchNewestAnime = require('./commands/new');
 
 const program = new Command();
 program
-    .name('AniNode')
-    .version('1.0.2')
-    .description('The newest anime steaming CLI, AniNode may be slow for now as i move to a new anime source.');
+    .name('NekoNode')
+    .version('1.0.4')
+    .description('The newest anime steaming CLI, NekoNode may be slow for now as i move to a new anime source.');
 
 program
     .command('watch')
