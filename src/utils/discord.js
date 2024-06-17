@@ -35,6 +35,11 @@ rpc.on('ready', () => {
     );
 });
 
-rpc.login({ clientId }).catch(console.error);
+rpc.login({ clientId }).catch(handleError);
+
+function handleError(error) {
+    // return console.error(`An error occurred: ${error.message}`);
+    return
+}
 
 module.exports = setRichPresence

@@ -102,6 +102,9 @@ async function watchAnime() {
             videoUrl = await parseScriptTags(tempUrl);
         }
 
+        // next ep
+        // anime-name-ep_number
+
         history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl)
         playVideo(videoUrl)
 
