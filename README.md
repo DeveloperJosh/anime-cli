@@ -10,8 +10,8 @@ NekoNode is a playful and powerful command-line interface tool for anime lovers,
 - 📂 **Library Management:** Organize your favorite anime and keep track of what you've watched.
 - 🎥 **Streaming Links:** Fetch streaming links for your favorite shows.
 - 📜 **Anime Info:** Get detailed information on anime, including episodes, ratings, and more.
-- 📝 **Anime Quotes:** Retrieve famous quotes from your favorite anime characters.
-- 💬 **Character Info:** Learn more about your favorite anime characters.
+- 📝 **Anime Quotes:** Retrieve famous quotes from your favorite anime characters. (Coming soon)
+- 💬 **Character Info:** Learn more about your favorite anime characters. (Coming soon)
 
 ## Requirements
 
