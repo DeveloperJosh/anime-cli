@@ -5,6 +5,8 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const History = require('../utils/history');
 const playVideo = require('../utils/player');
+const parseScriptTags = require('../utils/parser');
+const { exec } = require('child_process');
 const history = new History();
 
 async function watchAnime() {
@@ -85,10 +87,12 @@ async function watchAnime() {
          videoUrl = $('a[rel="3"]').attr('data-video');
         } else if (videoSource === 'streamwish') {
 
-         videoUrl = $('a[rel="13"]').attr('data-video');
+        const tempUrl = $('a[rel="13"]').attr('data-video');
+        
+        videoUrl = await parseScriptTags(tempUrl);
         }
-        history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl)
 
+        history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl)
         playVideo(videoUrl)
 
     } catch (error) {

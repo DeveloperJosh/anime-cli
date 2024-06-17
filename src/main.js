@@ -5,14 +5,10 @@ const watchAnime = require('./commands/watch');
 const inquirer = require('inquirer');
 const fetchNewestAnime = require('./commands/new');
 
-// preload mpv
-const { spawn } = require('child_process');
-spawn('mpv', ['--version'], { stdio: 'ignore' });
-
 const program = new Command();
 program
     .name('AniCLI')
-    .version('1.0.0')
+    .version('1.0.2')
     .description('The newest anime steaming CLI, AniCLI may be slow for now as i move to a new anime source.');
 
 program
@@ -34,8 +30,7 @@ program
 
 program
     .command('history')
-    .description('TThis will let you clear or view your history.')
-    // if --clear is passed, clear the history
+    .description('TThis will let you clear or view your history, you can use the -c flag to clear the history.')
     .option('-c, --clear', 'Clear the history')
     .action(async (options) => {
         if (options.clear) {
@@ -68,5 +63,4 @@ program
             playVideo(steamLink);
         }
     });
-
 program.parse(process.argv);

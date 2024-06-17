@@ -15,14 +15,20 @@ const mpvSocketName = '\\\\.\\pipe\\mpvsocket';
 // Function to play video using MPV or VLC based on config
 function playEpisode(episodeUrl, player) {
 
+    const history = new History();
+    const Newest = history.getHistory().slice(-1)[0];
+
     const playerOptions = {
         mpv: [
             '--no-terminal',
+            '-force-window=immediate',
+            `--force-media-title=AniCLI - ${Newest.animeName} - Episode ${Newest.episode}`,
             '--quiet',
             `--input-ipc-server=${mpvSocketName}`,
             '--cache=yes',
             '--hwdec=auto',
             '--vf=scale=1920:1080',
+            '--video-sync=display-resample', 
             episodeUrl
         ],
         vlc: [
@@ -85,7 +91,7 @@ async function playVideo(episodeUrl) {
             'logo2',
             'AniCLI',
             'logo1',
-            'Watching'
+            `Watching ${Newest.animeName} - Episode ${Newest.episode}`
         );
 
         console.log(`The Player is encoding the video, please wait for a few seconds...`);
@@ -111,7 +117,11 @@ async function playVideo(episodeUrl) {
 
                     console.clear(); // Clear console before showing the info
 
-                    console.log(`Player: ${config.player}\n\Episode URL: ${episodeUrl}\n`);
+                    //console.log(`Player: ${config.player}\n\Episode URL: ${episodeUrl}\nAnime Name: ${Newest.animeName}\nEpisode: ${Newest.episode}`);
+                    console.log(`Anime Name: ${Newest.animeName}`);
+                    console.log(`Episode: ${Newest.episode}`);
+                    console.log(`Player: ${config.player}`);
+                    console.log(`Episode URL: ${episodeUrl}`);
 
                     await inquirer.prompt({
                         type: 'input',
