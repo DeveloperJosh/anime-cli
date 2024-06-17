@@ -8,16 +8,12 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "base-64": "^1.0.0",
     "cheerio": "^1.0.0-rc.5",
     "child_process": "^1.0.2",
     "commander": "^8.0.0",
     "inquirer": "^8.2.6",
     "inquirer-autocomplete-prompt": "^1.0.3",
     "js-yaml": "^4.1.0",
-    "m3u8-parser": "^7.1.0",
-    "node-mpv": "^1.5.0",
-    "open": "^10.1.0",
     "ora": "^5.4.1"
   }
 }
