@@ -40,6 +40,12 @@ const fetchEpisodes = async (animeUrl) => {
             });
         }
 
+        // when user gets to the end of the list don't let them go further
+        episodes.push({
+            title: 'End of List',
+            url: 'End of List',
+        });
+
         return episodes;
     } catch (error) {
         spinner.stop();

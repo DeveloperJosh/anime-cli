@@ -1,19 +1,21 @@
 const inquirer = require('inquirer');
 const fetchAnime = require('../utils/fetchAnime');
 const fetchEpisodes = require('../utils/fetchEpisodes');
-const { exec } = require('child_process');
-const axios = require('axios');
-const cheerio = require('cheerio');
-
+const fetchlink = require('../utils/fetchVideoStreams');
 
 async function watchAnime() {
+
+    console.log('Welcome to the Anime CLI!\n\nI get that the player takes a while to load, But i plan on fixing that soon.');
+
     try {
+        // Prompt for anime name
         const { animeName } = await inquirer.prompt({
             type: 'input',
             name: 'animeName',
             message: 'Enter the name of the anime:'
         });
 
+        // Fetch the list of animes
         const animeList = await fetchAnime(animeName);
 
         if (animeList.length === 0) {
@@ -21,6 +23,7 @@ async function watchAnime() {
             return;
         }
 
+        // Prompt for anime choice
         const { animeChoice } = await inquirer.prompt({
             type: 'list',
             name: 'animeChoice',
@@ -31,7 +34,8 @@ async function watchAnime() {
             }))
         });
 
-        console.log(`Fetching episodes from: ${animeChoice.url}`);
+        //console.log(`Fetching episodes from: ${animeChoice.url}`);
+        // Fetch the list of episodes
         const episodes = await fetchEpisodes(animeChoice.url);
 
         if (episodes.length === 0) {
@@ -39,6 +43,7 @@ async function watchAnime() {
             return;
         }
 
+        // Prompt for episode choice
         const { episodeChoice } = await inquirer.prompt({
             type: 'list',
             name: 'episodeChoice',
@@ -49,21 +54,8 @@ async function watchAnime() {
             }))
         });
 
-        const episodePageResponse = await axios.get(episodeChoice);
-        const $ = cheerio.load(episodePageResponse.data);
-        const videoUrl = $('a[rel="13"]').attr('data-video');
-
-        if (videoUrl) {
-            console.log(`Playing: ${videoUrl}`);
-            exec(`mpv ${videoUrl}`, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Error playing video: ${error.message}`);
-                    return;
-                }
-            });
-        } else {
-            console.log('No stream link found.');
-        }
+        //console.log(`Watching episode: ${episodeChoice}`);
+        await fetchlink(episodeChoice);
     } catch (error) {
         console.error('Error watching anime:', error.message);
     }
