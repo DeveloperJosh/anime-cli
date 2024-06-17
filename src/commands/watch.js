@@ -4,15 +4,17 @@ const fetchEpisodes = require('../utils/fetchEpisodes');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const History = require('../utils/history');
-const playVideo = require('../utils/player');
+const { playVideo, sendMpvCommand } = require('../utils/player');
 const parseScriptTags = require('../utils/parser');
 const { exec } = require('child_process');
+const configLoader = require('../utils/configLoader');
+
+const config = configLoader();
 const history = new History();
 
 async function watchAnime() {
     console.log('Welcome to the Anime CLI!\n\nI get that the player takes a while to load, But I plan on fixing that soon.');
 
-    // check for mpv player
     exec('mpv --version', (error, stdout, stderr) => {
         if (error) {
             console.error('MPV player is required to watch anime. Please install it first, then try again. You can download it from https://mpv.io/');
@@ -21,24 +23,20 @@ async function watchAnime() {
     });
 
     try {
-        // Prompt for anime name
         const { animeName } = await inquirer.prompt({
             type: 'input',
             name: 'animeName',
             message: 'Enter the name of the anime:'
         });
 
-        // Fetch the list of animes
         const animeList = await fetchAnime(animeName);
 
         if (animeList.length === 0) {
-            // ask them if they want to try again
             console.log('No anime found.');
             process.exit();
             return;
         }
 
-        // Prompt for anime choice
         const { animeChoice } = await inquirer.prompt({
             type: 'list',
             name: 'animeChoice',
@@ -49,8 +47,8 @@ async function watchAnime() {
             }))
         });
 
-        // Fetch the list of episodes
         const episodeData = await fetchEpisodes(animeChoice.url);
+
         if (!episodeData || episodeData.episodes.length === 0) {
             console.log('No episodes found.');
             return;
@@ -58,7 +56,6 @@ async function watchAnime() {
 
         const { episodes, animeName: fetchedAnimeName } = episodeData;
 
-        // Prompt for episode choice
         const { episodeChoice } = await inquirer.prompt({
             type: 'list',
             name: 'episodeChoice',
@@ -74,8 +71,6 @@ async function watchAnime() {
             return;
         } 
 
-        // ask if the user wants to use mp4upload, streamwish, vidhide
-        
         const { videoSource } = await inquirer.prompt({
             type: 'list',
             name: 'videoSource',
@@ -92,22 +87,84 @@ async function watchAnime() {
         const $ = cheerio.load(episodePageResponse.data);
 
         if (videoSource === 'mp4upload') {
-         videoUrl = $('a[rel="3"]').attr('data-video');
+            videoUrl = $('a[rel="3"]').attr('data-video');
         } else if (videoSource === 'streamwish') {
-
-        const tempUrl = $('a[rel="13"]').attr('data-video');
-        videoUrl = await parseScriptTags(tempUrl);
+            const tempUrl = $('a[rel="13"]').attr('data-video');
+            videoUrl = await parseScriptTags(tempUrl);
         } else if (videoSource === 'vidhide') {
-            tempUrl = $('a[rel="15"]').attr('data-video');
+            const tempUrl = $('a[rel="15"]').attr('data-video');
             videoUrl = await parseScriptTags(tempUrl);
         }
 
-        // next ep
-        // anime-name-ep_number
+        history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl);
 
-        history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl)
-        playVideo(videoUrl)
+        let processHandle = playVideo(videoUrl);
 
+        let playing = true;
+        console.clear();
+        while (playing) {
+            const { menu } = await inquirer.prompt({
+                type: 'list',
+                name: 'menu',
+                message: 'Select an option:',
+                choices: [
+                    { name: 'Player Info', value: 'info' },
+                    { name: 'Anime Info', value: 'anime'},
+                    { name: 'Next Episode', value: 'next' },
+                ]
+            });
+
+            if (menu === 'info') {
+                console.clear();
+                console.log(`Anime Name: ${animeChoice.name}`);
+                console.log(`Episode: ${episodeChoice.title}`);
+                console.log(`Player: ${config.player}`);
+                console.log(`Episode URL: ${episodeChoice.url}`);
+                console.log(`Video URL: ${videoUrl}`);
+
+                await inquirer.prompt({
+                    type: 'input',
+                    name: 'continue',
+                    message: 'Press Enter to continue...'
+                });
+                console.clear();
+            } else if (menu === 'next') {
+                playing = false;
+                sendMpvCommand('quit');
+
+                const nextEpisodeIndex = episodes.findIndex(episode => episode.title === episodeChoice.title) + 1;
+                const nextEpisode = episodes[nextEpisodeIndex];
+
+                if (nextEpisode) {
+                    const nextEpisodePageResponse = await axios.get(nextEpisode.url);
+                    const $next = cheerio.load(nextEpisodePageResponse.data);
+
+                    if (videoSource === 'mp4upload') {
+                        videoUrl = $next('a[rel="3"]').attr('data-video');
+                    } else if (videoSource === 'streamwish') {
+                        const tempUrl = $next('a[rel="13"]').attr('data-video');
+                        videoUrl = await parseScriptTags(tempUrl);
+                    } else if (videoSource === 'vidhide') {
+                        const tempUrl = $next('a[rel="15"]').attr('data-video');
+                        videoUrl = await parseScriptTags(tempUrl);
+                    }
+
+                    history.save(animeChoice.name, nextEpisode.title, nextEpisode.url, videoUrl);
+                    processHandle = playVideo(videoUrl);
+                    playing = true;
+                }
+            } else if (menu === 'anime') {
+                console.clear();
+                console.log("Not Supported Yet")
+
+                await inquirer.prompt({
+                    type: 'input',
+                    name: 'continue',
+                    message: 'Press Enter to continue...'
+                });
+                console.clear();
+            }
+        }
     } catch (error) {
         console.error('Error watching anime:', error.message);
     }

@@ -1,18 +1,13 @@
-const { spawn, exec } = require('child_process');
-const inquirer = require('inquirer');
-const setRichPresence = require('./discord');
+const { spawn } = require('child_process');
 const History = require('./history');
 const net = require('net');
 const loadConfig = require('./configLoader');
 
 const config = loadConfig();
-
-let processHandle;
 const mpvSocketName = '\\\\.\\pipe\\mpvsocket';
 
 // Function to play video using MPV or VLC based on config
 function playEpisode(episodeUrl, player) {
-
     const history = new History();
     const Newest = history.getHistory().slice(-1)[0];
 
@@ -41,20 +36,17 @@ function playEpisode(episodeUrl, player) {
     const command = player === 'vlc' ? 'vlc' : 'mpv';
     const options = playerOptions[player];
 
-    processHandle = spawn(command, options, { stdio: 'inherit' });
+    let processHandle = spawn(command, options, { stdio: 'inherit' });
 
     processHandle.on('error', (error) => {
         console.error(`Error starting ${player}: ${error.message}`);
     });
 
-    processHandle.on('close', async (code) => {
+    processHandle.on('close', (code) => {
         if (code === 0) {
-            console.clear(); // Clear console after player exits
-            console.log('Player exited successfully.');
-            process.exit(0);
+            return;
         } else {
             console.error(`${player.toUpperCase()} exited with code ${code}`);
-            process.exit(1);
         }
     });
 
@@ -75,67 +67,10 @@ function sendMpvCommand(command) {
 
 async function playVideo(episodeUrl) {
     try {
-        console.clear(); // Clear console before starting the player
-        // Play the video
         playEpisode(episodeUrl, config.player);
-
-        const history = new History();
-        const Newest = history.getHistory().slice(-1)[0];
-
-        setRichPresence(
-            `Watching ${Newest.animeName}`,
-            `Using NekoNode with ${config.player} player`,
-            Date.now(),
-            'nekocli',
-            'NekoNode',
-            'logo2',
-            `Watching ${Newest.animeName} - Episode ${Newest.episode}`
-        );
-
-        console.log(`The Player is encoding the video, please wait for a few seconds...`);
-
-        let playing = true;
-
-        while (playing) {
-            const { menu } = await inquirer.prompt({
-                type: 'list',
-                name: 'menu',
-                message: 'Select an option:',
-                choices: [
-                    { name: 'Info', value: 'info' },
-                    { name: 'Stop', value: 'stop' }
-                ]
-            });
-
-            if (config.player === 'mpv') {
-                if (menu === 'stop') {
-                    sendMpvCommand('quit');
-                    playing = false;
-                } else if (menu === 'info') {
-
-                    console.clear(); // Clear console before showing the info
-
-                    //console.log(`Player: ${config.player}\n\Episode URL: ${episodeUrl}\nAnime Name: ${Newest.animeName}\nEpisode: ${Newest.episode}`);
-                    console.log(`Anime Name: ${Newest.animeName}`);
-                    console.log(`Episode: ${Newest.episode}`);
-                    console.log(`Player: ${config.player}`);
-                    console.log(`Episode URL: ${episodeUrl}`);
-
-                    await inquirer.prompt({
-                        type: 'input',
-                        name: 'continue',
-                        message: 'Press Enter to continue...'
-                    });
-                    console.clear(); // Clear console after showing the info
-                }
-            } else if (config.player === 'vlc') {
-                console.log('VLC command execution is not supported on Windows via named pipes.');
-                playing = false; // Stop the loop for now as VLC control is not implemented
-            }
-        }
     } catch (error) {
         console.error('Error playing video:', error.message);
     }
 }
 
-module.exports = playVideo;
+module.exports = { playVideo, sendMpvCommand };
