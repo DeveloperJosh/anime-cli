@@ -1,6 +1,4 @@
 const { spawn, exec } = require('child_process');
-const fs = require('fs');
-const yaml = require('js-yaml');
 const inquirer = require('inquirer');
 const setRichPresence = require('./discord');
 const History = require('./history');
@@ -22,7 +20,7 @@ function playEpisode(episodeUrl, player) {
         mpv: [
             '--no-terminal',
             '-force-window=immediate',
-            `--force-media-title=NekoNode  - ${Newest.animeName} - Episode ${Newest.episode}`,
+            `--force-media-title=NekoNode - ${Newest.animeName} - ${Newest.episode}`,
             '--quiet',
             `--input-ipc-server=${mpvSocketName}`,
             '--cache=yes',
@@ -88,9 +86,9 @@ async function playVideo(episodeUrl) {
             `Watching ${Newest.animeName}`,
             `Using NekoNode with ${config.player} player`,
             Date.now(),
+            'nekocli',
+            'NekoNode',
             'logo2',
-            'NekoNode ',
-            'logo1',
             `Watching ${Newest.animeName} - Episode ${Newest.episode}`
         );
 

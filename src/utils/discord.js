@@ -15,6 +15,9 @@ const setRichPresence = (details, state, startTimestamp, largeImageKey, largeIma
         smallImageKey: smallImageKey || 'small_image_key',
         smallImageText: smallImageText || 'Active',
         instance: false,
+        buttons: [
+            { label: 'NekoNode', url: 'https://www.npmjs.com/package/nekonode' }
+        ]
     });
 };
 
@@ -25,9 +28,9 @@ rpc.on('ready', () => {
         'Using NekoNode',
         'Looking for an anime to watch...',
         Date.now(),
+        'nekocli',
+        'NekoNode',
         'logo2',
-        'CLI',
-        'logo1',
         'Active'
     );
 });

@@ -1,7 +1,5 @@
 # NekoNode
 
-![NekoNode Logo](link_to_logo_image)
-
 NekoNode is a playful and powerful command-line interface tool for anime lovers, built on Node.js. It brings the joy of anime to your terminal, making it easy to search, manage, and explore anime content.
 
 ## Features

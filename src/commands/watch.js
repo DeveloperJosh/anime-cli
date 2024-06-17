@@ -12,6 +12,14 @@ const history = new History();
 async function watchAnime() {
     console.log('Welcome to the Anime CLI!\n\nI get that the player takes a while to load, But I plan on fixing that soon.');
 
+    // check for mpv player
+    exec('mpv --version', (error, stdout, stderr) => {
+        if (error) {
+            console.error('MPV player is required to watch anime. Please install it first, then try again. You can download it from https://mpv.io/');
+            process.exit();
+        }
+    });
+
     try {
         // Prompt for anime name
         const { animeName } = await inquirer.prompt({
