@@ -22,7 +22,7 @@ rpc.on('ready', () => {
     //console.log('Rich Presence is ready');
     // Set initial Rich Presence
     setRichPresence(
-        'Using AniCLI',
+        'Using AniNode',
         'Looking for an anime to watch...',
         Date.now(),
         'logo2',
