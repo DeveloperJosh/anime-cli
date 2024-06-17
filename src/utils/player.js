@@ -1,28 +1,13 @@
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const yaml = require('js-yaml');
 const inquirer = require('inquirer');
+const setRichPresence = require('./discord');
+const History = require('./history');
 const net = require('net');
+const loadConfig = require('./configLoader');
 
-let config;
-try {
-    const configFile = fs.readFileSync(`${process.env.APPDATA}/anime-cli/config.yml`, 'utf8');
-    config = yaml.load(configFile);
-} catch (e) {
-    console.error(`Failed to load configuration: ${e.message}, create a config.yml file with the required configuration.`);
-
-    // Make sure the config appdata folder exists
-    if (!fs.existsSync(`${process.env.APPDATA}/anime-cli`)) {
-        fs.mkdirSync(`${process.env.APPDATA}/anime-cli`, { recursive: true });
-    }
-
-    // Create a default config file
-    fs.writeFileSync(`${process.env.APPDATA}/anime-cli/config.yml`, `player: mpv`);
-    // add base url to the config file
-    fs.appendFileSync(`${process.env.APPDATA}/anime-cli/config.yml`, '\nbaseUrl: https://gogoanime3.co');
-
-    process.exit(1);
-}
+const config = loadConfig();
 
 let processHandle;
 const mpvSocketName = '\\\\.\\pipe\\mpvsocket';
@@ -61,6 +46,7 @@ function playEpisode(episodeUrl, player) {
     processHandle.on('close', async (code) => {
         if (code === 0) {
             console.clear(); // Clear console after player exits
+            console.log('Player exited successfully.');
             process.exit(0);
         } else {
             console.error(`${player.toUpperCase()} exited with code ${code}`);
@@ -88,7 +74,21 @@ async function playVideo(episodeUrl) {
         console.clear(); // Clear console before starting the player
         // Play the video
         playEpisode(episodeUrl, config.player);
-        console.log('The Player is encoding the video, please wait for a few seconds...');
+
+        const history = new History();
+        const Newest = history.getHistory().slice(-1)[0];
+
+        setRichPresence(
+            `Watching ${Newest.animeName}`,
+            `Using AniCLI with ${config.player} player`,
+            Date.now(),
+            'logo2',
+            'AniCLI',
+            'logo1',
+            'Watching'
+        );
+
+        console.log(`The Player is encoding the video, please wait for a few seconds...`);
 
         let playing = true;
 
