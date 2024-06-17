@@ -22,7 +22,7 @@ function playEpisode(episodeUrl, player) {
         mpv: [
             '--no-terminal',
             '-force-window=immediate',
-            `--force-media-title=AniNode - ${Newest.animeName} - Episode ${Newest.episode}`,
+            `--force-media-title=NekoNode  - ${Newest.animeName} - Episode ${Newest.episode}`,
             '--quiet',
             `--input-ipc-server=${mpvSocketName}`,
             '--cache=yes',
@@ -86,10 +86,10 @@ async function playVideo(episodeUrl) {
 
         setRichPresence(
             `Watching ${Newest.animeName}`,
-            `Using AniNode with ${config.player} player`,
+            `Using NekoNode with ${config.player} player`,
             Date.now(),
             'logo2',
-            'AniNode',
+            'NekoNode ',
             'logo1',
             `Watching ${Newest.animeName} - Episode ${Newest.episode}`
         );
