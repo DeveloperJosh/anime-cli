@@ -83,10 +83,10 @@ async function watchAnime() {
             choices: [
                 { name: 'mp4upload', value: 'mp4upload' },
                 { name: 'streamwish', value: 'streamwish' },
+                { name: 'vidhide', value: 'vidhide'}
             ]
         });
 
-        // Fetch the video URL
         let videoUrl = '';
         const episodePageResponse = await axios.get(episodeChoice.url);
         const $ = cheerio.load(episodePageResponse.data);
@@ -96,8 +96,10 @@ async function watchAnime() {
         } else if (videoSource === 'streamwish') {
 
         const tempUrl = $('a[rel="13"]').attr('data-video');
-        
         videoUrl = await parseScriptTags(tempUrl);
+        } else if (videoSource === 'vidhide') {
+            tempUrl = $('a[rel="15"]').attr('data-video');
+            videoUrl = await parseScriptTags(tempUrl);
         }
 
         history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl)

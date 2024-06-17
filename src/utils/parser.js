@@ -18,7 +18,7 @@ function parseScriptTags(url) {
                         const match = scriptContent.match(regex);
                         if (match) {
                             const url = match[1];
-                            console.log(url);
+                            //console.log(url);
                             resolve(url); // Resolve the Promise with the URL
                         }
                     }

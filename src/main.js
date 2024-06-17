@@ -4,6 +4,7 @@ const { Command } = require('commander');
 const watchAnime = require('./commands/watch');
 const inquirer = require('inquirer');
 const fetchNewestAnime = require('./commands/new');
+var Table = require('cli-table3');
 
 const program = new Command();
 program
@@ -48,19 +49,18 @@ program
                 process.exit();
             }
 
-            const { historyItem } = await inquirer.prompt({
-                type: 'list',
-                name: 'historyItem',
-                message: 'Select an item to watch:',
-                choices: historyList.map(item => ({
-                    name: `${item.animeName} - Episode ${item.episode}`,
-                    value: item
-                }))
+            // show a list of history
+            console.info('History:');
+            const table = new Table({
+                head: ['Anime Name', 'Episode', 'Link'],
+                colWidths: [60, 20, 60]
+            });
+            historyList.forEach(history => {
+                table.push([history.animeName, history.episode, history.link]);
             });
 
-            const { steamLink } = historyItem;
-            const playVideo = require('./utils/player');
-            playVideo(steamLink);
+            console.log(table.toString());
+            process.exit();
         }
     });
 program.parse(process.argv);
