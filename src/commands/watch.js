@@ -13,6 +13,7 @@ const config = configLoader();
 const history = new History();
 
 async function watchAnime() {
+    console.clear();
     console.log('Welcome to the Anime CLI!');
     exec('mpv --version', (error, stdout, stderr) => {
         if (error) {
@@ -92,8 +93,13 @@ async function selectEpisode(animeChoice) {
     const videoUrl = videoSource ? videoSource.url : null;
     
     if (!videoUrl) {
-        console.log('No video found with 1080p quality.');
-        return;
+        // look for quality backup
+        if (Array.isArray(response.data.sources)) {
+            const videoSource = response.data.sources.find(source => source.quality === 'backup');
+            videoUrl = videoSource ? videoSource.url : null;
+        } else {
+            console.error('Error: response.data.sources is not an array');
+        }
     }
 
     history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl);
