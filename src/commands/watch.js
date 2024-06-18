@@ -1,12 +1,11 @@
 const inquirer = require('inquirer');
+const axios = require('axios');
+const { exec } = require('child_process');
+
 const fetchAnime = require('../utils/fetchAnime');
 const fetchEpisodes = require('../utils/fetchEpisodes');
-const axios = require('axios');
-const cheerio = require('cheerio');
 const History = require('../utils/history');
 const playVideo = require('../utils/player');
-const parseScriptTags = require('../utils/parser');
-const { exec } = require('child_process');
 const configLoader = require('../utils/configLoader');
 const setRichPresence = require('../utils/discord');
 
@@ -32,10 +31,10 @@ async function displayMenu() {
             type: 'list',
             name: 'action',
             message: 'Select an option:',
-            choices: ['Watch Anime', 'Exit']
+            choices: ['Search', 'Exit']
         });
 
-        if (action === 'Watch Anime') {
+        if (action === 'Search') {
             await selectAnime();
         } else if (action === 'Exit') {
             console.log('Exiting...');
@@ -63,10 +62,7 @@ async function selectAnime() {
             type: 'list',
             name: 'animeChoice',
             message: 'Select an anime:',
-            choices: animeList.map(anime => ({
-                name: anime.name,
-                value: anime
-            }))
+            choices: animeList.map(anime => ({ name: anime.name, value: anime }))
         });
 
         await selectEpisode(animeChoice);
@@ -86,66 +82,29 @@ async function selectEpisode(animeChoice) {
         type: 'list',
         name: 'episodeChoice',
         message: `Select an episode from ${episodeData.animeName}:`,
-        choices: episodeData.episodes.map(episode => ({
-            name: episode.title,
-            value: episode
-        }))
+        choices: episodeData.episodes.map(episode => ({ name: episode.title, value: episode }))
     });
 
-    await fetchVideoSource(episodeChoice);
-}
+    const episodeId = episodeChoice.url.split('/').pop();
 
-async function fetchVideoSource(episodeChoice) {
-    const episodePageResponse = await axios.get(episodeChoice.url);
-    const $ = cheerio.load(episodePageResponse.data);
-    const { videoSource } = await inquirer.prompt({
-        type: 'list',
-        name: 'videoSource',
-        message: 'Select a video source:',
-        choices: [
-            { name: 'mp4upload', value: 'mp4upload' },
-            { name: 'streamwish', value: 'streamwish' },
-            { name: 'vidhide', value: 'vidhide'}
-        ]
-    });
-
-    let videoUrl = '';
-    if (videoSource === 'mp4upload') {
-        videoUrl = $('a[rel="3"]').attr('data-video');
-    } else if (videoSource === 'streamwish') {
-        const tempUrl = $('a[rel="13"]').attr('data-video');
-        videoUrl = await parseScriptTags(tempUrl);
-    } else if (videoSource === 'vidhide') {
-        const tempUrl = $('a[rel="15"]').attr('data-video');
-        videoUrl = await parseScriptTags(tempUrl);
-    }
-
+    const response = await axios.get(`${config.api}/anime/gogoanime/watch/${episodeId}`);
+    const videoSource = response.data.sources.find(source => source.quality === '1080p');
+    const videoUrl = videoSource ? videoSource.url : null;
+    
     if (!videoUrl) {
-        console.log('Video URL not found. Please try another source or episode.');
+        console.log('No video found with 1080p quality.');
         return;
     }
 
+    history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl);
     playVideo(videoUrl);
-    history.save(episodeChoice.animeName, episodeChoice.title, episodeChoice.url, videoUrl);
-    setRichPresence(
-        `Watching ${episodeChoice.animeName} - ${episodeChoice.title}`,
-        `Using the ${config.player} player`,
-        Date.now(),
-        'nekocli',
-        'NekoNode',
-        'logo2',
-        'Active'
-    );
+    setRichPresence(`Watching ${animeChoice.name} - ${episodeChoice.title}`, `Using the ${config.player} player`, Date.now(), 'nekocli', 'NekoNode', 'logo2', 'Active');
 
     await promptToReturn();
 }
 
 async function promptToReturn() {
-    await inquirer.prompt({
-        type: 'input',
-        name: 'return',
-        message: 'Press enter to return to the main menu...'
-    });
+    await inquirer.prompt({ type: 'input', name: 'return', message: 'Press enter to return to the main menu...' });
 }
 
 module.exports = watchAnime;
