@@ -2,6 +2,7 @@ const { spawn } = require('child_process');
 const History = require('./history');
 const net = require('net');
 const loadConfig = require('./configLoader');
+const setRichPresence = require('./discord');
 
 const config = loadConfig();
 const mpvSocketName = '\\\\.\\pipe\\mpvsocket';
@@ -46,7 +47,8 @@ function playEpisode(episodeUrl, player) {
         if (code === 0) {
             return;
         } else {
-            console.error(`${player.toUpperCase()} exited with code ${code}`);
+            console.error(`${player} exited with code ${code}, This means you should try a new source.`);
+            process.exit(code);
         }
     });
 
@@ -73,4 +75,4 @@ async function playVideo(episodeUrl) {
     }
 }
 
-module.exports = { playVideo, sendMpvCommand };
+module.exports = playVideo;

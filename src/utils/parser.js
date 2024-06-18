@@ -6,25 +6,30 @@ function parseScriptTags(url) {
         axios.get(url)
             .then(response => {
                 const $ = cheerio.load(response.data);
-                // Select all script tags
                 const scriptTags = $('script');
-                // Iterate over each script tag
+                let found = false; // Flag to indicate if a URL was found
+                
                 scriptTags.each((index, element) => {
                     const scriptContent = $(element).html();
-                    // Check if the script content contains 'sources:'
-                    if (scriptContent.includes('sources:')) {
-                        // Use a regular expression to extract the URL
+                    if (scriptContent && scriptContent.includes('sources:')) {
                         const regex = /file:"(.*?)"/;
                         const match = scriptContent.match(regex);
                         if (match) {
+                            found = true;
                             const url = match[1];
-                            //console.log(url);
                             resolve(url); // Resolve the Promise with the URL
+                            return false; // Break the loop after finding the URL
                         }
                     }
                 });
+
+                if (!found) {
+                    reject(new Error('Try another video source option.'));
+                }
             })
-            .catch(reject); // Reject the Promise if there's an error
+            .catch(error => {
+                reject(new Error(`Failed to fetch or parse content: ${error.message}`));
+            });
     });
 }
 
