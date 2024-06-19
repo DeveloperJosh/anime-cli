@@ -206,7 +206,23 @@ async function episodeMenu(currentEpisodeId) {
             await episodeMenu(currentEpisodeId);
             break;
         case 'Anime Info':
-            await showAnimeInfo(currentEpisodeId); // Pass currentEpisodeId
+            console.clear();
+            let name = currentAnime.name;
+            let animeNameSlug = name.toLowerCase().replace(/\s/g, '-');
+            if (animeNameSlug.includes(':')) {
+                animeNameSlug = animeNameSlug.replace(':', '');
+            }
+            // check for -(dub)
+            if (animeNameSlug.includes('-(dub)')) {
+                animeNameSlug = animeNameSlug.replace('-(dub)', '');
+            }
+            let url = `${config.api}/anime/gogoanime/info/${animeNameSlug}`
+            const response = await axios.get(url);
+            let animeInfo = response.data;
+            let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.releaseDate}\nType: ${animeInfo.type}\nDescription: ${animeInfo.description}`;
+            console.log(text);
+            await promptReturnToMenu();
+            await episodeMenu(currentEpisodeId);
             break;
         case 'Return to main menu':
             await displayMenu();
@@ -279,28 +295,6 @@ async function downloadEpisode(currentEpisodeId) {
         await episodeMenu(currentEpisodeId);
     } catch (error) {
         console.error('Error downloading episode:', error.message);
-    }
-}
-
-async function showAnimeInfo(currentEpisodeId) {
-    try {
-        const animeNameSlug = currentAnime.name.toLowerCase().replace(/\s|:/g, '-').replace('-(dub)', '');
-        const url = `${config.api}/anime/gogoanime/info/${animeNameSlug}`;
-        const response = await axios.get(url);
-        const animeInfo = response.data;
-
-        console.log(`Title: ${animeInfo.title}
-Total Episodes: ${animeInfo.totalEpisodes}
-Genres: ${animeInfo.genres.join(', ')}
-Status: ${animeInfo.status}
-Release Date: ${animeInfo.releaseDate}
-Type: ${animeInfo.type}
-Description: ${animeInfo.description}`);
-
-        await promptReturnToMenu();
-        await episodeMenu(currentEpisodeId); // Use the parameter currentEpisodeId
-    } catch (error) {
-        console.error('Error fetching anime info:', error.message);
     }
 }
 
