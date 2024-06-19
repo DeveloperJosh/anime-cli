@@ -13,10 +13,6 @@ async function listAnime() {
     const spinner = ora('Loading anime list').start();
     const animeListNames = animeList.showAnimeNames();
     spinner.stop();
-    if (animeListNames.length === 0) {
-        console.log('No anime found in the list.');
-        process.exit();
-    }
 
     const { animeListName } = await inquirer.prompt({
         type: 'list',
@@ -29,7 +25,12 @@ async function listAnime() {
         console.log('Exiting...');
         process.exit(0);
     } else if (animeListName === 'Get') {
-        // Prompt the user to select an anime
+
+        if (animeListNames.length === 0) {
+            console.log('No anime found.');
+            process.exit();
+        }
+
         const { animeName } = await inquirer.prompt({
             type: 'list',
             name: 'animeName',
@@ -96,6 +97,12 @@ async function listAnime() {
         });
 
         if (removeType === 'Specific episode') {
+
+            if (animeListNames.length === 0) {
+                console.log('No anime found.');
+                process.exit();
+            }
+
             const { animeName } = await inquirer.prompt({
                 type: 'list',
                 name: 'animeName',
@@ -119,6 +126,12 @@ async function listAnime() {
             console.log('Anime episode removed.');
             process.exit();
         } else if (removeType === 'Remove anime') {
+
+            if (animeListNames.length === 0) {
+                console.log('No anime found.');
+                process.exit();
+            }
+
             const { animeName } = await inquirer.prompt({
                 type: 'list',
                 name: 'animeName',
