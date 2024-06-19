@@ -1,16 +1,10 @@
 const { spawn } = require('child_process');
-const History = require('./history');
-const net = require('net');
 const loadConfig = require('./configLoader');
-const setRichPresence = require('./discord');
 
 const config = loadConfig();
-const mpvSocketName = '\\\\.\\pipe\\mpvsocket';
 
 // Function to play video using MPV or VLC based on config
 function playEpisode(episodeUrl, player, animeName, episode) {
-    //const history = new History();
-   // const Newest = history.getHistory().slice(-1)[0];
 
     const playerOptions = {
         mpv: [
@@ -18,7 +12,6 @@ function playEpisode(episodeUrl, player, animeName, episode) {
             '-force-window=immediate',
             `--force-media-title=NekoNode - ${animeName} - ${episode}`,
             '--quiet',
-            `--input-ipc-server=${mpvSocketName}`,
             '--cache=yes',
             '--hwdec=auto',
             '--vf=scale=1920:1080',
@@ -53,18 +46,6 @@ function playEpisode(episodeUrl, player, animeName, episode) {
     });
 
     return processHandle;
-}
-
-// Function to send commands to MPV via named pipe
-function sendMpvCommand(command) {
-    const client = net.connect(mpvSocketName, () => {
-        client.write(`{"command": ["${command}"]}\n`);
-        client.end();
-    });
-
-    client.on('error', (error) => {
-        console.error(`Error communicating with MPV: ${error.message}`);
-    });
 }
 
 async function playVideo(episodeUrl, animeName, episode) {
