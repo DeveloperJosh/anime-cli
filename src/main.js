@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-
 const { Command } = require('commander');
 const watchAnime = require('./commands/watch');
-const inquirer = require('inquirer');
+const listAnime = require('./commands/list');
 const fetchNewestAnime = require('./commands/new');
 var Table = require('cli-table3');
 
@@ -10,17 +9,22 @@ const program = new Command();
 program
     .name('NekoNode')
     .version('1.0.4')
-    .description('The newest anime steaming CLI, NekoNode may be slow for now as i move to a new anime source.');
+    .description('The newest anime steaming CLI');
 
 program
     .command('watch')
-    .description('This command will allow you to watch anime from the command line.')
+    .description('Allows to watch what anime you want at 1080p quality.')
     .action(watchAnime);
 
 program
     .command('new')
-    .description('This command will allow you to get the newest anime from the command line.')
+    .description('Shows the newest anime that is out.')
     .action(fetchNewestAnime);
+
+program
+    .command('list')
+    .description('Uses MyAnimeList to you, Your anime list.')
+    .action(listAnime);
 
 program
     .command('config')

@@ -8,15 +8,15 @@ const config = loadConfig();
 const mpvSocketName = '\\\\.\\pipe\\mpvsocket';
 
 // Function to play video using MPV or VLC based on config
-function playEpisode(episodeUrl, player) {
-    const history = new History();
-    const Newest = history.getHistory().slice(-1)[0];
+function playEpisode(episodeUrl, player, animeName, episode) {
+    //const history = new History();
+   // const Newest = history.getHistory().slice(-1)[0];
 
     const playerOptions = {
         mpv: [
             '--no-terminal',
             '-force-window=immediate',
-            `--force-media-title=NekoNode - ${Newest.animeName} - ${Newest.episode}`,
+            `--force-media-title=NekoNode - ${animeName} - ${episode}`,
             '--quiet',
             `--input-ipc-server=${mpvSocketName}`,
             '--cache=yes',
@@ -67,9 +67,9 @@ function sendMpvCommand(command) {
     });
 }
 
-async function playVideo(episodeUrl) {
+async function playVideo(episodeUrl, animeName, episode) {
     try {
-        playEpisode(episodeUrl, config.player);
+        playEpisode(episodeUrl, config.player, animeName, episode);
     } catch (error) {
         console.error('Error playing video:', error.message);
     }

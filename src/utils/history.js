@@ -38,7 +38,13 @@ class History {
     save(animeName, episode, link, steamLink) {
         this.history.push({ animeName, episode, link, steamLink });
         try {
-            fs.writeFileSync(this.historyFilePath, yaml.dump(this.history));
+            // Use yaml.dump with custom options to get JSON-like output
+            const yamlStr = yaml.dump(this.history, {
+                noRefs: true,
+                flowLevel: 2, // Control the nesting level for which block style will be used
+                styles: { '!!null': 'null' } // Optional: Ensure null values are explicitly defined
+            });
+            fs.writeFileSync(this.historyFilePath, yamlStr);
         } catch (error) {
             console.error(`Failed to save history: ${error.message}`);
         }
@@ -51,7 +57,12 @@ class History {
     clearHistory() {
         this.history = [];
         try {
-            fs.writeFileSync(this.historyFilePath, yaml.dump(this.history));
+            const yamlStr = yaml.dump(this.history, {
+                noRefs: true,
+                flowLevel: 2,
+                styles: { '!!null': 'null' }
+            });
+            fs.writeFileSync(this.historyFilePath, yamlStr);
         } catch (error) {
             console.error(`Failed to clear history: ${error.message}`);
         }
@@ -69,7 +80,12 @@ class History {
         if (index >= 0 && index < this.history.length) {
             this.history.splice(index, 1);
             try {
-                fs.writeFileSync(this.historyFilePath, yaml.dump(this.history));
+                const yamlStr = yaml.dump(this.history, {
+                    noRefs: true,
+                    flowLevel: 2,
+                    styles: { '!!null': 'null' }
+                });
+                fs.writeFileSync(this.historyFilePath, yamlStr);
             } catch (error) {
                 console.error(`Failed to remove entry from history: ${error.message}`);
             }

@@ -8,13 +8,18 @@ const History = require('../utils/history');
 const playVideo = require('../utils/player');
 const configLoader = require('../utils/configLoader');
 const setRichPresence = require('../utils/discord');
+const animeList = require('../utils/animelist');
 
 const config = configLoader();
 const history = new History();
+const animeListInstance = new animeList();
+
+let currentAnime = null; // Global variable to hold the current anime choice
+let currentEpisode = null; // Global variable to hold the current episode choice
 
 async function watchAnime() {
     console.clear();
-    console.log('Welcome to the Anime CLI!');
+    console.log('Welcome to the NekoNode!');
     exec('mpv --version', (error, stdout, stderr) => {
         if (error) {
             console.error('MPV player is required to watch anime. Please install it first, then try again. You can download it from https://mpv.io/');
@@ -26,6 +31,9 @@ async function watchAnime() {
 }
 
 async function displayMenu() {
+    // make currentAnime null
+    currentAnime = null;
+    currentEpisode = null;
     let exit = false;
     while (!exit) {
         const { action } = await inquirer.prompt({
@@ -66,14 +74,15 @@ async function selectAnime() {
             choices: animeList.map(anime => ({ name: anime.name, value: anime }))
         });
 
-        await selectEpisode(animeChoice);
+        currentAnime = animeChoice; // Save the selected anime to the global variable
+        await selectEpisode();
     } catch (error) {
         console.error('Error selecting anime:', error.message);
     }
 }
 
-async function selectEpisode(animeChoice) {
-    const episodeData = await fetchEpisodes(animeChoice.url);
+async function selectEpisode() {
+    const episodeData = await fetchEpisodes(currentAnime.url);
     if (!episodeData || episodeData.episodes.length === 0) {
         console.log('No episodes found.');
         return;
@@ -87,30 +96,98 @@ async function selectEpisode(animeChoice) {
     });
 
     const episodeId = episodeChoice.url.split('/').pop();
-
-    const response = await axios.get(`${config.api}/anime/gogoanime/watch/${episodeId}`);
-    const videoSource = response.data.sources.find(source => source.quality === '1080p');
-    const videoUrl = videoSource ? videoSource.url : null;
-    
-    if (!videoUrl) {
-        // look for quality backup
-        if (Array.isArray(response.data.sources)) {
-            const videoSource = response.data.sources.find(source => source.quality === 'backup');
-            videoUrl = videoSource ? videoSource.url : null;
-        } else {
-            console.error('Error: response.data.sources is not an array');
+    const response = await axios.get(`${config.api}/anime/gogoanime/watch/${episodeId}`, {
+        params: {
+            server: 'gogocdn'
         }
-    }
+    });
+    let videoUrl = findVideoUrl(response.data.sources);
 
-    history.save(animeChoice.name, episodeChoice.title, episodeChoice.url, videoUrl);
-    playVideo(videoUrl);
-    setRichPresence(`Watching ${animeChoice.name} - ${episodeChoice.title}`, `Using the ${config.player} player`, Date.now(), 'nekocli', 'NekoNode', 'logo2', 'Active');
-
-    await promptToReturn();
+    history.save(currentAnime.name, episodeChoice.title, episodeChoice.url, videoUrl);
+    playVideo(videoUrl, currentAnime.name, episodeChoice.title);
+    currentEpisode = episodeChoice; // Save the selected episode to the global variable
+    setRichPresence(`Watching ${currentAnime.name} - ${episodeChoice.title}`, `Using the ${config.player} player`, Date.now(), 'nekocli', 'NekoNode', 'logo2', 'Active');
+    await episodeMenu(episodeId);
 }
 
-async function promptToReturn() {
-    await inquirer.prompt({ type: 'input', name: 'return', message: 'Press enter to return to the main menu...' });
+function findVideoUrl(sources) {
+    let videoUrl = sources.find(source => source.quality === '1080p')?.url;
+    if (!videoUrl) {
+        videoUrl = sources.find(source => source.quality === 'backup')?.url;
+    }
+    return videoUrl;
+}
+
+async function episodeMenu(currentEpisodeId) {
+    console.clear();
+    if (!currentEpisodeId) {
+        console.log('Error: No episode ID provided.');
+        return;
+    }
+
+    //console.log(`You are currently watching ${currentAnime.name}.`);
+    const { action } = await inquirer.prompt({
+        type: 'list',
+        name: 'action',
+        message: 'Select an option:',
+        choices: ['Next Episode', 'Previous Episode', 'Return to main menu']
+    });
+
+    if (action === 'Next Episode') {
+        await nextEpisode(currentEpisodeId);
+    } else if (action === 'Previous Episode') {
+        await previousEpisode(currentEpisodeId);
+    } else if (action === 'Return to main menu') {
+        await displayMenu();
+    }
+}
+
+async function nextEpisode(currentEpisodeId) {
+    let basePart = currentEpisodeId.substring(0, currentEpisodeId.lastIndexOf('-') + 1);
+    let episodeNumber = parseInt(currentEpisodeId.substring(currentEpisodeId.lastIndexOf('-') + 1)) + 1;
+    const nextEpisodeId = `${basePart}${episodeNumber}`;
+
+    const response = await axios.get(`${config.api}/anime/gogoanime/watch/${nextEpisodeId}`, {
+        params: {
+            server: 'gogocdn'
+        }
+    });
+
+    let videoUrl = findVideoUrl(response.data.sources);
+    
+    if (!videoUrl) {
+        console.log('No more episodes found.');
+        return;
+    }
+
+    history.save(currentAnime.name, `EP ${episodeNumber}`, response.data.link, videoUrl);
+    //    history.save(currentAnime.name, episodeChoice.title, episodeChoice.url, videoUrl);
+    playVideo(videoUrl, currentAnime.name, `Episode ${episodeNumber}`);
+    setRichPresence(`Watching ${currentAnime.name} - Episode ${episodeNumber}`, `Using the ${config.player} player`, Date.now(), 'nekocli', 'NekoNode', 'logo2', 'Active');
+    await episodeMenu(nextEpisodeId);
+}
+
+async function previousEpisode(currentEpisodeId) {
+    let basePart = currentEpisodeId.substring(0, currentEpisodeId.lastIndexOf('-') + 1);
+    let episodeNumber = parseInt(currentEpisodeId.substring(currentEpisodeId.lastIndexOf('-') + 1)) - 1;
+    const previousEpisodeId = `${basePart}${episodeNumber}`;
+
+    const response = await axios.get(`${config.api}/anime/gogoanime/watch/${previousEpisodeId}`, {
+        params: {
+            server: 'gogocdn'
+        }
+    });
+    let videoUrl = findVideoUrl(response.data.sources);
+
+    if (!videoUrl) {
+        console.log('No more episodes found.');
+        return;
+    }
+
+    history.save(currentAnime.name, `EP ${episodeNumber}`, response.data.link, videoUrl);
+    playVideo(videoUrl, currentAnime.name, `Episode ${episodeNumber}`);
+    setRichPresence(`Watching ${currentAnime.name} - Episode ${episodeNumber}`, `Using the ${config.player} player`, Date.now(), 'nekocli', 'NekoNode', 'logo2', 'Active');
+    await episodeMenu(previousEpisodeId);
 }
 
 module.exports = watchAnime;

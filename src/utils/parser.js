@@ -1,3 +1,4 @@
+// Unused code, Although it is a good idea to keep it for future reference.
 const axios = require('axios');
 const cheerio = require('cheerio');
 
