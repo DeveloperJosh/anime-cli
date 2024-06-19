@@ -139,6 +139,14 @@ async function episodeMenu(currentEpisodeId) {
         console.clear();
         let name = currentAnime.name;
         let animeNameSlug = name.toLowerCase().replace(/\s/g, '-');
+        // make a regex to check for -(dub), :, and other special characters
+
+        let specialChars = /[^a-zA-Z0-9\s]/g;
+        animeNameSlug = animeNameSlug.replace(specialChars, '');
+        // check for :
+        if (animeNameSlug.includes(':')) {
+            animeNameSlug = animeNameSlug.replace(':', '');
+        }
         // check for -(dub)
         if (animeNameSlug.includes('-(dub)')) {
             animeNameSlug = animeNameSlug.replace('-(dub)', '');
