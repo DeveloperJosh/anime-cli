@@ -12,7 +12,7 @@ const animeList = require('../utils/animelist');
 
 const config = configLoader();
 const history = new History();
-const animeListInstance = new animeList();
+const animelist= new animeList(); // TODO: add this to player menu
 
 let currentAnime = null; // Global variable to hold the current anime choice
 let currentEpisode = null; // Global variable to hold the current episode choice

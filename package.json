@@ -21,13 +21,10 @@
     "cli-table3": "^0.6.5",
     "commander": "^8.0.0",
     "crypto": "^1.0.1",
-    "discord-rpc": "^4.0.1",
     "inquirer": "^8.2.6",
     "inquirer-autocomplete-prompt": "^1.0.3",
     "js-yaml": "^4.1.0",
-    "m3u8-parser": "^7.1.0",
-    "node-cache": "^5.1.2",
     "ora": "^5.4.1",
-    "puppeteer": "^22.11.1"
+    "uuid": "^10.0.0"
   }
 }

@@ -1,45 +1,45 @@
-const RPC = require('discord-rpc');
+const DiscordRPC = require('./DiscordRPC.js');
 const clientId = '1252150069982007398';
 
-RPC.register(clientId);
-
-const rpc = new RPC.Client({ transport: 'ipc' });
+const rpc = new DiscordRPC(clientId);
 
 const setRichPresence = (details, state, startTimestamp, largeImageKey, largeImageText, smallImageKey, smallImageText) => {
     rpc.setActivity({
         details: details || 'Using My CLI',
         state: state || 'Working on a project',
-        startTimestamp: startTimestamp || Date.now(),
-        largeImageKey: largeImageKey || 'image_key',
-        largeImageText: largeImageText || 'CLI',
-        smallImageKey: smallImageKey || 'small_image_key',
-        smallImageText: smallImageText || 'Active',
-        instance: false,
+        timestamps: {
+            start: startTimestamp || Math.floor(Date.now() / 1000)
+        },
+        assets: {
+            large_image: largeImageKey || 'image_key',
+            large_text: largeImageText || 'CLI',
+            small_image: smallImageKey || 'small_image_key',
+            small_text: smallImageText || 'Active'
+        },
         buttons: [
             { label: 'NekoNode', url: 'https://www.npmjs.com/package/nekonode' }
         ]
     });
 };
 
-rpc.on('ready', () => {
-    //console.log('Rich Presence is ready');
-    // Set initial Rich Presence
-    setRichPresence(
-        'Using NekoNode',
-        'Looking for an anime to watch...',
-        Date.now(),
-        'nekocli',
-        'NekoNode',
-        'logo2',
-        'Active'
-    );
+rpc.connect();
+
+// This will automatically set the activity once connected
+rpc.setActivity({
+    details: 'Using NekoNode',
+    state: 'Looking for an anime to watch...',
+    timestamps: {
+        start: Math.floor(Date.now() / 1000)
+    },
+    assets: {
+        large_image: 'nekocli',
+        large_text: 'NekoNode',
+        small_image: 'logo2',
+        small_text: 'Active'
+    },
+    buttons: [
+        { label: 'NekoNode', url: 'https://www.npmjs.com/package/nekonode' }
+    ]
 });
 
-rpc.login({ clientId }).catch(handleError);
-
-function handleError(error) {
-    // return console.error(`An error occurred: ${error.message}`);
-    return
-}
-
-module.exports = setRichPresence
+module.exports = setRichPresence;

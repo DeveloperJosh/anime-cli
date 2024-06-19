@@ -72,10 +72,10 @@ program
     .action(() => {
         console.clear();
         let about = `
-        Welcome to NekoNode! This CLI tool is designed to scrape anime information from the Gogoanime website. 
-        It was created out of a passion for both anime and web scraping, providing a simple way to find and access your favorite anime directly from the command line.
+Welcome to NekoNode! This CLI tool is designed to scrape anime information from the Gogoanime website. 
+It was created out of a passion for both anime and web scraping, providing a simple way to find and access your favorite anime directly from the command line.
         
-        Developed with curiosity and a desire to learn, NekoNode is a testament to exploring new technologies and making the process of discovering anime more convenient.
+Developed with curiosity and a desire to learn, NekoNode is a testament to exploring new technologies and making the process of discovering anime more convenient.
         `;
         console.log(about);
         process.exit();
