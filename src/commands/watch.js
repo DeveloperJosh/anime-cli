@@ -130,12 +130,34 @@ async function episodeMenu(currentEpisodeId) {
         type: 'list',
         name: 'action',
         message: 'Select an option:',
-        choices: ['Next Episode', 'Previous Episode', 'Return to main menu']
+        choices: ['Anime Info', 'Next Episode', 'Previous Episode', 'Return to main menu']
     });
 
     if (action === 'Next Episode') {
         await nextEpisode(currentEpisodeId);
-    } else if (action === 'Previous Episode') {
+    } else if (action === 'Anime Info') {
+        console.clear();
+        let name = currentAnime.name;
+        let animeNameSlug = name.toLowerCase().replace(/\s/g, '-');
+        // check for -(dub)
+        if (animeNameSlug.includes('-(dub)')) {
+            animeNameSlug = animeNameSlug.replace('-(dub)', '');
+        }
+        let url = `${config.api}/anime/gogoanime/info/${animeNameSlug}`
+        ///console.log(`DEBUG: ${url}`);
+        const response = await axios.get(url);
+        let animeInfo = response.data;
+        let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.releaseDate}\nType: ${animeInfo.type}\nDescription: ${animeInfo.description}`;
+        console.log(text);
+        // hit enter to go back to the episode menu
+        const { back } = await inquirer.prompt({
+            type: 'input',
+            name: 'back',
+            message: 'Hit enter to go back'
+        });
+        await episodeMenu(currentEpisodeId);
+    }
+    else if (action === 'Previous Episode') {
         await previousEpisode(currentEpisodeId);
     } else if (action === 'Return to main menu') {
         await displayMenu();
