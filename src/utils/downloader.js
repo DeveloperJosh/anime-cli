@@ -6,6 +6,7 @@ function convertUrlToMp4(m3u8Url, outputPath) {
         //console.log('Converting to MP4...');
 
         // Initialize the spinner
+        console.log('This may take a some time depending on the video length and your internet speed.');
         const spinner = ora('Starting download...').start();
         spinner.color = 'yellow';
 
