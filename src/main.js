@@ -8,7 +8,7 @@ var Table = require('cli-table3');
 const program = new Command();
 program
     .name('NekoNode')
-    .version('1.0.7')
+    .version('1.0.8')
     .description('The newest anime steaming CLI');
 
 program
@@ -23,7 +23,7 @@ program
 
 program
     .command('list')
-    .description('Uses MyAnimeList to you, Your anime list.')
+    .description('Anime list manager, you can add, remove, and view your anime list.')
     .action(listAnime);
 
 program
