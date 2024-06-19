@@ -5,7 +5,8 @@ const listAnime = require('./commands/list');
 const fetchNewestAnime = require('./commands/new');
 const History = require('./utils/history');
 const history = new History();
-var Table = require('cli-table3');
+const Table = require('cli-table3');
+const chalk = require('chalk');
 
 const program = new Command();
 program
@@ -47,21 +48,27 @@ program
         } else {
             const historyList = history.getHistory();
             if (historyList.length === 0) {
-                console.log('No history found.');
+                console.log(chalk.yellow('No history found.'));
                 process.exit();
             }
 
-            // show a list of history
-            console.info('History:');
+            // Display a list of history
+            console.info(chalk.blue.bold('\nHistory:'));
             const table = new Table({
-                head: ['Anime Name', 'Episode', 'Link'],
-                colWidths: [60, 20, 60]
+                head: [chalk.bold('Anime Name'), chalk.bold('Episode'), chalk.bold('Link')],
+                colWidths: [30, 10, 50],
+                style: {
+                    head: ['cyan'],
+                    border: ['grey']
+                }
             });
+
             historyList.forEach(history => {
                 table.push([history.animeName, history.episode, history.link]);
             });
 
             console.log(table.toString());
+            console.info(chalk.blue('\nEnd of History\n'));
             process.exit();
         }
     });

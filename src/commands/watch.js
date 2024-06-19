@@ -1,5 +1,7 @@
 const inquirer = require('inquirer');
+const chalk = require('chalk');
 const axios = require('axios');
+const Table = require('cli-table3');
 const { exec } = require('child_process');
 
 const fetchAnime = require('../utils/fetchAnime');
@@ -38,17 +40,62 @@ async function displayMenu() {
             type: 'list',
             name: 'action',
             message: 'Select an option:',
-            choices: ['Search', 'Exit']
+            choices: ['Search', 'View History', 'Exit']
         });
 
         if (action === 'Search') {
             await selectAnime();
+        } else if (action === 'View History') {
+            await viewHistory();
         } else if (action === 'Exit') {
             console.log('Exiting...');
             exit = true;
             process.exit(0);
         }
     }
+}
+
+async function viewHistory() {
+    const historyList = history.getHistory();
+    if (historyList.length === 0) {
+        console.log(chalk.yellow('No history found.'));
+        const { back } = await inquirer.prompt({
+            type: 'input',
+            name: 'back',
+            message: 'Hit enter to go back'
+        });
+        console.clear();
+        await displayMenu();
+    }
+
+    // Display a list of history
+    console.info(chalk.blue.bold('\nHistory:'));
+    const table = new Table({
+        head: [chalk.bold('Anime Name'), chalk.bold('Episode'), chalk.bold('Link')],
+        colWidths: [30, 10, 50],
+        style: {
+            head: ['cyan'],
+            border: ['grey']
+        }
+    });
+
+    historyList.forEach(history => {
+        table.push([history.animeName, history.episode, history.link]);
+    });
+
+    console.log(table.toString());
+    console.info(chalk.blue('\nEnd of History\n'));
+
+    // hit enter to go back to the main menu
+    const { back } = await inquirer.prompt({
+        type: 'input',
+        name: 'back',
+        message: 'Hit enter to go back'
+    });
+
+    console.clear();
+
+    await displayMenu();
 }
 
 async function selectAnime() {
@@ -128,20 +175,33 @@ async function episodeMenu(currentEpisodeId) {
         type: 'list',
         name: 'action',
         message: 'Select an option:',
-        choices: ['Anime Info', 'Next Episode', 'Previous Episode', 'Return to main menu']
+        choices: ['Anime Info', 'Save Episode', 'Next Episode', 'Previous Episode', 'Return to main menu']
     });
 
     if (action === 'Next Episode') {
         await nextEpisode(currentEpisodeId);
-    } else if (action === 'Anime Info') {
+    } else if (action === 'Save Episode') {
+        let ep = currentEpisode.title;
+
+        // get num from ep
+        let num = ep.match(/\d+/g);
+        let _ep = num[0];
+        console.log(`DEBUG: ${_ep}`);
+        animelist.save(currentAnime.name, _ep, currentEpisode.url);
+        console.log('Episode saved to anime list.');
+
+        await inquirer.prompt({
+            type: 'input',
+            name: 'back',
+            message: 'Hit enter to go back'
+        });
+        console.clear();
+
+        await episodeMenu(currentEpisodeId);
+    }  else if (action === 'Anime Info') {
         console.clear();
         let name = currentAnime.name;
         let animeNameSlug = name.toLowerCase().replace(/\s/g, '-');
-        // make a regex to check for -(dub), :, and other special characters
-
-        let specialChars = /[^a-zA-Z0-9\s]/g;
-        animeNameSlug = animeNameSlug.replace(specialChars, '');
-        // check for :
         if (animeNameSlug.includes(':')) {
             animeNameSlug = animeNameSlug.replace(':', '');
         }
@@ -156,7 +216,7 @@ async function episodeMenu(currentEpisodeId) {
         let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.releaseDate}\nType: ${animeInfo.type}\nDescription: ${animeInfo.description}`;
         console.log(text);
         // hit enter to go back to the episode menu
-        const { back } = await inquirer.prompt({
+        await inquirer.prompt({
             type: 'input',
             name: 'back',
             message: 'Hit enter to go back'
@@ -187,9 +247,10 @@ async function nextEpisode(currentEpisodeId) {
         console.log('No more episodes found.');
         return;
     }
-
-    history.save(currentAnime.name, `EP ${episodeNumber}`, response.data.link, videoUrl);
-    //    history.save(currentAnime.name, episodeChoice.title, episodeChoice.url, videoUrl);
+    let new_name = currentAnime.name.replace(/\s/g, '-');
+    new_name = new_name.toLowerCase();
+    let link = `https://gogoanime3.co/${new_name}-episode-${episodeNumber}`;
+    history.save(animeName=currentAnime.name, episode=`EP ${episodeNumber}`, link=link, video=videoUrl);
     playVideo(videoUrl, currentAnime.name, `Episode ${episodeNumber}`);
     setRichPresence(`Watching ${currentAnime.name} - Episode ${episodeNumber}`, `Using the ${config.player} player`, Date.now(), 'nekocli', 'NekoNode', 'logo2', 'Active');
     await episodeMenu(nextEpisodeId);
@@ -211,8 +272,10 @@ async function previousEpisode(currentEpisodeId) {
         console.log('No more episodes found.');
         return;
     }
-
-    history.save(currentAnime.name, `EP ${episodeNumber}`, response.data.link, videoUrl);
+    let new_name = currentAnime.name.replace(/\s/g, '-');
+    new_name = new_name.toLowerCase();
+    let link = `https://gogoanime3.co/${new_name}-episode-${episodeNumber}`;
+    history.save(animeName=currentAnime.name, episode= `EP ${episodeNumber}`, link=link, video=videoUrl);
     playVideo(videoUrl, currentAnime.name, `Episode ${episodeNumber}`);
     setRichPresence(`Watching ${currentAnime.name} - Episode ${episodeNumber}`, `Using the ${config.player} player`, Date.now(), 'nekocli', 'NekoNode', 'logo2', 'Active');
     await episodeMenu(previousEpisodeId);
