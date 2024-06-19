@@ -3,6 +3,8 @@ const { Command } = require('commander');
 const watchAnime = require('./commands/watch');
 const listAnime = require('./commands/list');
 const fetchNewestAnime = require('./commands/new');
+const History = require('./utils/history');
+const history = new History();
 var Table = require('cli-table3');
 
 const program = new Command();
@@ -39,14 +41,10 @@ program
     .option('-c, --clear', 'Clear the history')
     .action(async (options) => {
         if (options.clear) {
-            const History = require('./utils/history');
-            const history = new History();
             history.clearHistory();
             console.log('History cleared.');
             process.exit();
         } else {
-            const History = require('./utils/history');
-            const history = new History();
             const historyList = history.getHistory();
             if (historyList.length === 0) {
                 console.log('No history found.');
@@ -67,4 +65,20 @@ program
             process.exit();
         }
     });
+
+program
+    .command('about')
+    .description('Learn more about this CLI and its creator.')
+    .action(() => {
+        console.clear();
+        let about = `
+        Welcome to NekoNode! This CLI tool is designed to scrape anime information from the Gogoanime website. 
+        It was created out of a passion for both anime and web scraping, providing a simple way to find and access your favorite anime directly from the command line.
+        
+        Developed with curiosity and a desire to learn, NekoNode is a testament to exploring new technologies and making the process of discovering anime more convenient.
+        `;
+        console.log(about);
+        process.exit();
+    });
+
 program.parse(process.argv);
