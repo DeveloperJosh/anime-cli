@@ -1,15 +1,15 @@
 
 # NekoNode
 
-  
-
 NekoNode is a playful and powerful command-line interface tool for anime lovers, built on Node.js. It brings the joy of anime to your terminal, making it easy to search, manage, and explore anime content.
 
-  
+## Supported Platforms
+
+- Windows
+- Linux
+- MacOS (Coming soon)
 
 ## Features
-
-  
 
 - 🌟 **Anime Search:** Quickly search for anime information directly from your terminal.
 
@@ -27,8 +27,6 @@ NekoNode is a playful and powerful command-line interface tool for anime lovers,
 
 ## Requirements
 
-  
-
 - [Node.js](https://nodejs.org/en/)
 
 - [MPV](https://mpv.io/)
@@ -36,7 +34,5 @@ NekoNode is a playful and powerful command-line interface tool for anime lovers,
   
 
 ## Found a Bug?
-
-  
 
 If you find a bug or have a feature request, please open an issue on the [NekoNode GitHub repository](https://github.com/DeveloperJosh/anime-cli/issues) make sure it has the `bug` Label.

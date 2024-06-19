@@ -3,7 +3,9 @@ const chalk = require('chalk');
 const axios = require('axios');
 const Table = require('cli-table3');
 const { exec } = require('child_process');
-
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
 const fetchAnime = require('../utils/fetchAnime');
 const fetchEpisodes = require('../utils/fetchEpisodes');
 const History = require('../utils/history');
@@ -11,6 +13,7 @@ const playVideo = require('../utils/player');
 const configLoader = require('../utils/configLoader');
 const setRichPresence = require('../utils/discord');
 const animeList = require('../utils/animelist');
+const convertUrlToMp4 = require('../utils/downloader');
 
 const config = configLoader();
 const history = new History();
@@ -87,7 +90,7 @@ async function viewHistory() {
     console.info(chalk.blue('\nEnd of History\n'));
 
     // hit enter to go back to the main menu
-    const { back } = await inquirer.prompt({
+    await inquirer.prompt({
         type: 'input',
         name: 'back',
         message: 'Hit enter to go back'
@@ -175,12 +178,52 @@ async function episodeMenu(currentEpisodeId) {
         type: 'list',
         name: 'action',
         message: 'Select an option:',
-        choices: ['Anime Info', 'Save Episode', 'Next Episode', 'Previous Episode', 'Return to main menu']
+        choices: ['Anime Info', 'Download', 'Save Episode', 'Next Episode', 'Previous Episode', 'Return to main menu']
     });
 
     if (action === 'Next Episode') {
         await nextEpisode(currentEpisodeId);
-    } else if (action === 'Save Episode') {
+    } else if (action === 'Download') {
+        try {
+            const response = await axios.get(`${config.api}/anime/gogoanime/watch/${currentEpisodeId}`, {
+                params: {
+                    server: 'gogocdn'
+                }
+            });
+    
+            let videoUrl = findVideoUrl(response.data.sources);
+            if (!videoUrl) {
+                console.log('No video found.');
+                return;
+            }
+            const videosPath = path.join(os.homedir(), 'Videos');
+            const animePath = path.join(videosPath, currentAnime.name);
+            const outputFilePath = path.join(animePath, `${currentAnime.name} - ${currentEpisode.title}.mp4`);
+    
+            // Create directories if they don't exist
+            if (!fs.existsSync(videosPath)) {
+                fs.mkdirSync(videosPath, { recursive: true });
+            }
+    
+            if (!fs.existsSync(animePath)) {
+                fs.mkdirSync(animePath, { recursive: true });
+            }
+    
+            await convertUrlToMp4(videoUrl, outputFilePath);
+    
+            await inquirer.prompt({
+                type: 'input',
+                name: 'back',
+                message: 'Hit enter to go back'
+            });
+            console.clear();
+            await episodeMenu(currentEpisodeId);
+    
+        } catch (error) {
+            console.error('Error:', error.message);
+        }
+    } 
+    else if (action === 'Save Episode') {
         let ep = currentEpisode.title;
 
         // get num from ep
