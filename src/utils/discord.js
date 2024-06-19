@@ -1,45 +1,43 @@
-const DiscordRPC = require('./DiscordRPC.js');
+const RPC = require('discord-rpc');
 const clientId = '1252150069982007398';
 
-const rpc = new DiscordRPC(clientId);
+RPC.register(clientId);
+
+const rpc = new RPC.Client({ transport: 'ipc' });
 
 const setRichPresence = (details, state, startTimestamp, largeImageKey, largeImageText, smallImageKey, smallImageText) => {
     rpc.setActivity({
         details: details || 'Using My CLI',
         state: state || 'Working on a project',
-        timestamps: {
-            start: startTimestamp || Math.floor(Date.now() / 1000)
-        },
-        assets: {
-            large_image: largeImageKey || 'image_key',
-            large_text: largeImageText || 'CLI',
-            small_image: smallImageKey || 'small_image_key',
-            small_text: smallImageText || 'Active'
-        },
+        startTimestamp: startTimestamp || Date.now(),
+        largeImageKey: largeImageKey || 'image_key',
+        largeImageText: largeImageText || 'CLI',
+        smallImageKey: smallImageKey || 'small_image_key',
+        smallImageText: smallImageText || 'Active',
+        instance: false,
         buttons: [
             { label: 'NekoNode', url: 'https://www.npmjs.com/package/nekonode' }
         ]
     });
 };
 
-rpc.connect();
-
-// This will automatically set the activity once connected
-rpc.setActivity({
-    details: 'Using NekoNode',
-    state: 'Looking for an anime to watch...',
-    timestamps: {
-        start: Math.floor(Date.now() / 1000)
-    },
-    assets: {
-        large_image: 'nekocli',
-        large_text: 'NekoNode',
-        small_image: 'logo2',
-        small_text: 'Active'
-    },
-    buttons: [
-        { label: 'NekoNode', url: 'https://www.npmjs.com/package/nekonode' }
-    ]
+rpc.on('ready', () => {
+    setRichPresence(
+        'Using NekoNode',
+        'Looking for an anime to watch...',
+        Date.now(),
+        'nekocli',
+        'NekoNode',
+        'logo2',
+        'Active'
+    );
 });
 
-module.exports = setRichPresence;
+rpc.login({ clientId }).catch(handleError);
+
+function handleError(error) {
+    // return console.error(`An error occurred: ${error.message}`);
+    return
+}
+
+module.exports = setRichPresence

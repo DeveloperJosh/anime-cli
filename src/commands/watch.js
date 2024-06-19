@@ -26,12 +26,10 @@ async function watchAnime() {
             process.exit();
         }
     });
-
     await displayMenu();
 }
 
 async function displayMenu() {
-    // make currentAnime null
     currentAnime = null;
     currentEpisode = null;
     let exit = false;
