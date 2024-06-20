@@ -1,10 +1,16 @@
-const fs = require('fs');
+const fs = require('node:fs');
 const yaml = require('js-yaml');
 const path = require('path');
+const os = require('os');
 
 class AnimeList {
     constructor() {
-        this.animeListFilePath = path.join(process.env.APPDATA, 'anime-cli', 'animeList.yml');
+        const isWindows = process.platform === 'win32';
+        const configDir = isWindows
+            ? path.join(process.env.APPDATA, 'anime-cli')
+            : path.join(os.homedir(), '.anime-cli');
+        
+        this.animeListFilePath = path.join(configDir, 'animeList.yml');
         this.animeList = this.loadAnimeList();
     }
 
@@ -13,7 +19,6 @@ class AnimeList {
             if (fs.existsSync(this.animeListFilePath)) {
                 const animeListFile = fs.readFileSync(this.animeListFilePath, 'utf8');
                 const loadedList = yaml.load(animeListFile) || {};
-                //console.log('Loaded Anime List:', loadedList); // Debugging output
                 return loadedList;
             } else {
                 this.createAnimeListFile();
@@ -42,7 +47,6 @@ class AnimeList {
             this.animeList[animeName] = [];
         }
 
-        // Check if the episode already exists in the list
         const episodeExists = this.animeList[animeName].some(ep => ep.episode === episode);
         if (episodeExists) {
             return;
@@ -72,7 +76,6 @@ class AnimeList {
                 flowLevel: 2,
                 styles: { '!!null': 'null' }
             });
-            //console.log('Saving Anime List:', this.animeList); // Debugging output
             fs.writeFileSync(this.animeListFilePath, yamlStr);
         } catch (error) {
             console.error(`Failed to save anime list: ${error.message}`);
@@ -93,7 +96,6 @@ class AnimeList {
     }
 
     showAnimeNames() {
-       // console.log('Current Anime List Structure:', this.animeList); // Debugging output
         return Object.keys(this.animeList);
     }
 }

@@ -4,8 +4,6 @@ const ora = require('ora');
 const chalk = require('chalk');
 const figlet = require('figlet');
 const configLoader = require('../utils/configLoader');
-const watchAnime = require('./watch');
-
 const config = configLoader();
 const animeList = new AnimeList();
 

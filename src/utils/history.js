@@ -1,10 +1,16 @@
-const fs = require('fs');
+const fs = require('node:fs');
 const yaml = require('js-yaml');
 const path = require('path');
+const os = require('os');
 
 class History {
     constructor() {
-        this.historyFilePath = path.join(process.env.APPDATA, 'anime-cli', 'history.yml');
+        const isWindows = process.platform === 'win32';
+        const configDir = isWindows
+            ? path.join(process.env.APPDATA, 'anime-cli')
+            : path.join(os.homedir(), '.anime-cli');
+        
+        this.historyFilePath = path.join(configDir, 'history.yml');
         this.history = this.loadHistory();
     }
 
@@ -38,11 +44,10 @@ class History {
     save(animeName, episode, link, steamLink) {
         this.history.push({ animeName, episode, link, steamLink });
         try {
-            // Use yaml.dump with custom options to get JSON-like output
             const yamlStr = yaml.dump(this.history, {
                 noRefs: true,
-                flowLevel: 2, // Control the nesting level for which block style will be used
-                styles: { '!!null': 'null' } // Optional: Ensure null values are explicitly defined
+                flowLevel: 2,
+                styles: { '!!null': 'null' }
             });
             fs.writeFileSync(this.historyFilePath, yamlStr);
         } catch (error) {
