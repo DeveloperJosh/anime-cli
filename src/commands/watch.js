@@ -1,5 +1,6 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
+const figlet = require('figlet');
 const axios = require('axios');
 const Table = require('cli-table3');
 const { exec } = require('child_process');
@@ -24,7 +25,7 @@ let currentEpisode = null;
 
 async function watchAnime() {
     console.clear();
-    console.log('Welcome to the NekoNode!');
+    console.log(chalk.magenta(figlet.textSync('NekoNode Watcher!')));
     
     // check config for player and then check if it is installed
     exec(`${config.player} --version`, (error, stdout, stderr) => {
