@@ -49,8 +49,13 @@ rpc.on('ready', () => {
 rpc.login({ clientId }).catch(handleError);
 
 function handleError(error) {
+    // if erorr message - Could not connect then ingore it
+    if (error.message === 'Could not connect') {
+        return;
+    } else {
     console.error(`An error occurred: ${error.message}`);
     // Optionally, you can perform additional error handling here, such as retrying or logging to a file.
+    }
 }
 
 export default setRichPresence;
