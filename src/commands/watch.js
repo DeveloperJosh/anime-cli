@@ -305,7 +305,6 @@ async function promptReturnToMenu() {
         name: 'back',
         message: 'Hit enter to go back'
         // lock so no other input can be entered
-
     });
     console.clear();
 }
