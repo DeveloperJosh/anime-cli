@@ -1,4 +1,6 @@
 import inquirer from 'inquirer';
+// color console output
+import chalk from 'chalk';
 import figlet from 'figlet';
 import axios from 'axios';
 import Table from 'cli-table3';
@@ -15,6 +17,7 @@ import configLoader from '../utils/configLoader.js';
 import AnimeList from '../utils/animelist.js';
 import convertUrlToMp4 from '../utils/downloader.js';
 import listAnime from './list.js';
+import fetchNewestAnime from './new.js';
 import setRichPresence from '../utils/discord.js';
 
 const config = configLoader();
@@ -26,7 +29,8 @@ let currentEpisode = null;
 
 async function watchAnime() {
     console.clear();
-    console.log(figlet.textSync('NekoNode Watcher!'));
+    // add a background color to the console
+    console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
 
     // Check config for player and then check if it is installed
     exec(`${config.player} --version`, (error, stdout, stderr) => {
@@ -45,11 +49,13 @@ async function displayMenu() {
             type: 'list',
             name: 'action',
             message: 'Select an option:',
-            choices: ['Search', 'View History', 'List Manager', 'Exit']
+            choices: ['Search', 'View History', 'List Manager', 'New Anime', 'Exit']
         });
 
         if (action === 'Search') {
             await selectAnime();
+        } else if (action === 'New Anime') {
+            await fetchNewestAnime();
         } else if (action === 'List Manager') {
             await listAnime();
         } else if (action === 'View History') {
@@ -173,6 +179,8 @@ function findVideoUrl(sources) {
 
 async function episodeMenu(currentEpisodeId) {
     console.clear();
+    //console.log(`Current Anime: ${currentAnime.name}`);
+    console.log(chalk.bgBlueBright(`Current Episode: ${currentAnime.name}`));
     if (!currentEpisodeId) {
         console.log('Error: No episode ID provided.');
         return;
@@ -183,11 +191,12 @@ async function episodeMenu(currentEpisodeId) {
         name: 'action',
         message: 'Select an option:',
         choices: [
-            'Anime Info',
-            'Download',
-            'Save Episode',
             'Next Episode',
             'Previous Episode',
+            'Reply Episode',
+            'Anime Info',
+            'Download',
+            'Save To List',
             'Return to main menu'
         ]
     });
@@ -197,6 +206,9 @@ async function episodeMenu(currentEpisodeId) {
             await navigateEpisode(currentEpisodeId, 1);
             currentEpisodeId += 1;
             break;
+        case 'Reply Episode':
+            await navigateEpisode(currentEpisodeId, 0);
+            break;
         case 'Previous Episode':
             await navigateEpisode(currentEpisodeId, -1);
             currentEpisodeId -= 1;
@@ -204,9 +216,11 @@ async function episodeMenu(currentEpisodeId) {
         case 'Download':
             await downloadEpisode(currentEpisodeId);
             break;
-        case 'Save Episode':
+        case 'Save To List':
             let episodeNumber = parseInt(currentEpisodeId.split('-').pop());
             episodeNumber = episodeNumber.toString();
+            //update currentEpisode.url to have the episode number
+            currentEpisode.url = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
             animeList.save(currentAnime.name, episodeNumber, currentEpisode.url);
             console.log('Episode saved to anime list.');
             await promptReturnToMenu();
@@ -336,7 +350,9 @@ async function promptReturnToMenu() {
         name: 'back',
         message: 'Hit enter to go back'
     });
+
     console.clear();
+    console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
 }
 
 export default watchAnime;

@@ -4,8 +4,9 @@ import watchAnime from './commands/watch.js';
 import listAnime from './commands/list.js';
 import fetchNewestAnime from './commands/new.js';
 import History from './utils/history.js';
-const history = new History();
 import Table from 'cli-table3';
+import chalk from 'chalk';
+const history = new History();
 
 const program = new Command();
 program
@@ -54,7 +55,7 @@ program
             // Display a list of history
             console.info('\nHistory:');
             const table = new Table({
-                head: [bold('Anime Name'), bold('Episode'), bold('Link')],
+                head: [chalk.bold('Anime Name'), chalk.bold('Episode'), chalk.bold('Link')],
                 colWidths: [30, 10, 50],
                 style: {
                     head: ['cyan'],

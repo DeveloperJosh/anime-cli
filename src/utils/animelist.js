@@ -51,6 +51,13 @@ class AnimeList {
         if (episodeExists) {
             return;
         }
+
+        // check if link already exists
+        const linkExists = this.animeList[animeName].some(ep => ep.link === link);
+        if (linkExists) {
+            return;
+        }
+
         this.animeList[animeName].push({ episode, link });
         this.saveAnimeList();
     }
