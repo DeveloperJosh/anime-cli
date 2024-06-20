@@ -1,5 +1,5 @@
-const { spawn } = require('child_process');
-const loadConfig = require('./configLoader');
+import { spawn } from 'child_process';
+import loadConfig from './configLoader.js';
 
 const config = loadConfig();
 
@@ -56,4 +56,4 @@ async function playVideo(episodeUrl, animeName, episode) {
     }
 }
 
-module.exports = playVideo;
+export default playVideo;

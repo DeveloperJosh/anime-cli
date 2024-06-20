@@ -1,12 +1,12 @@
 // Unused code, Although it is a good idea to keep it for future reference.
-const axios = require('axios');
-const cheerio = require('cheerio');
+import { get } from 'axios';
+import { load } from 'cheerio';
 
 function parseScriptTags(url) {
     return new Promise((resolve, reject) => {
-        axios.get(url)
+        get(url)
             .then(response => {
-                const $ = cheerio.load(response.data);
+                const $ = load(response.data);
                 const scriptTags = $('script');
                 let found = false; // Flag to indicate if a URL was found
                 
@@ -34,4 +34,4 @@ function parseScriptTags(url) {
     });
 }
 
-module.exports = parseScriptTags;
+export default parseScriptTags;

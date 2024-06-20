@@ -1,6 +1,6 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const loadConfig = require('./configLoader');
+import axios from 'axios';
+import { load } from 'cheerio';
+import loadConfig from './configLoader.js';
 
 const config = loadConfig();
 
@@ -21,7 +21,7 @@ async function fetchAnime(query) {
         //console.log('Search URL:', searchUrl);
 
         const response = await axios.get(searchUrl);
-        const $ = cheerio.load(response.data);
+        const $ = load(response.data);
 
         $('ul.items li').each((_, element) => {
             const animeName = $(element).find('p.name a').text().trim();
@@ -44,4 +44,4 @@ async function fetchAnime(query) {
     }
 }
 
-module.exports = fetchAnime;
+export default fetchAnime;

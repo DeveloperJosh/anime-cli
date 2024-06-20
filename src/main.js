@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-const { Command } = require('commander');
-const watchAnime = require('./commands/watch');
-const listAnime = require('./commands/list');
-const fetchNewestAnime = require('./commands/new');
-const History = require('./utils/history');
+import { Command } from 'commander';
+import watchAnime from './commands/watch.js';
+import listAnime from './commands/list.js';
+import fetchNewestAnime from './commands/new.js';
+import History from './utils/history.js';
 const history = new History();
-const Table = require('cli-table3');
-const chalk = require('chalk');
+import Table from 'cli-table3';
 
 const program = new Command();
 program
@@ -48,14 +47,14 @@ program
         } else {
             const historyList = history.getHistory();
             if (historyList.length === 0) {
-                console.log(chalk.yellow('No history found.'));
+                console.log('No history found.');
                 process.exit();
             }
 
             // Display a list of history
-            console.info(chalk.blue.bold('\nHistory:'));
+            console.info('\nHistory:');
             const table = new Table({
-                head: [chalk.bold('Anime Name'), chalk.bold('Episode'), chalk.bold('Link')],
+                head: [bold('Anime Name'), bold('Episode'), bold('Link')],
                 colWidths: [30, 10, 50],
                 style: {
                     head: ['cyan'],
@@ -68,7 +67,7 @@ program
             });
 
             console.log(table.toString());
-            console.info(chalk.blue('\nEnd of History\n'));
+            console.info('\nEnd of History\n');
             process.exit();
         }
     });
