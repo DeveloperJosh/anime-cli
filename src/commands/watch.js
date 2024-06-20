@@ -14,6 +14,7 @@ const playVideo = require('../utils/player');
 const configLoader = require('../utils/configLoader');
 const AnimeList = require('../utils/animelist');
 const convertUrlToMp4 = require('../utils/downloader');
+const listAnime = require('./list');
 const setRichPresence = require('../utils/discord');
 
 const config = configLoader();
@@ -44,12 +45,15 @@ async function displayMenu() {
             type: 'list',
             name: 'action',
             message: 'Select an option:',
-            choices: ['Search', 'View History', 'Exit']
+            choices: ['Search', 'View History', 'List Manager', 'Exit']
         });
 
         if (action === 'Search') {
             await selectAnime();
-        } else if (action === 'View History') {
+        } else if (action === 'List Manager') {
+            await listAnime();
+        }
+        else if (action === 'View History') {
             await viewHistory();
         } else if (action === 'Exit') {
             console.log('Exiting...');

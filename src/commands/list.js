@@ -4,6 +4,7 @@ const ora = require('ora');
 const chalk = require('chalk');
 const figlet = require('figlet');
 const configLoader = require('../utils/configLoader');
+const watchAnime = require('./watch');
 
 const config = configLoader();
 const animeList = new AnimeList();
@@ -27,7 +28,6 @@ async function listAnime() {
         case 'Exit':
             console.log(chalk.yellow('Exiting...'));
             process.exit(0);
-            break;
         case 'Get':
             await handleGetAnime(animeListNames);
             break;
@@ -51,11 +51,13 @@ async function handleGetAnime(animeListNames) {
         type: 'list',
         name: 'animeName',
         message: chalk.green('Select an anime:'),
-        choices: [...animeListNames, 'Back to Menu']
+        choices: [...animeListNames, 'Exit']
     });
 
-    if (animeName === 'Back to Menu') {
-        return;
+    if (animeName === 'Exit') {
+        console.log(chalk.yellow('Exiting...'));
+        console.clear();
+        process.exit(0);
     } else {
         const animeEpisodes = animeList.getAnimeEpisodes(animeName);
         if (animeEpisodes.length === 0) {
@@ -68,16 +70,6 @@ async function handleGetAnime(animeListNames) {
             console.log(chalk.cyan(`Episode ${episode.episode}: ${episode.link}`));
         });
     }
-}
-
-async function backtoMenu() {
-    await inquirer.prompt({
-        type: 'input',
-        name: 'backToMenu',
-        message: chalk.green('Press enter to go back to the menu')
-    });
-
-    listAnime();
 }
 
 async function handleAddAnime() {
@@ -112,7 +104,7 @@ async function handleRemoveAnime(animeListNames) {
         type: 'list',
         name: 'removeType',
         message: chalk.green('Select an option:'),
-        choices: ['Specific episode', 'Remove anime', 'Back to Menu']
+        choices: ['Specific episode', 'Remove anime', 'Exit']
     });
 
     if (removeType === 'Specific episode') {
@@ -156,6 +148,9 @@ async function handleRemoveAnime(animeListNames) {
         });
         animeList.remove(animeName);
         console.log(chalk.green('Anime removed.'));
+    } else {
+        console.log(chalk.yellow('Exiting...'));
+        process.exit(0);
     }
 }
 
