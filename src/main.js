@@ -11,7 +11,7 @@ const chalk = require('chalk');
 const program = new Command();
 program
     .name('NekoNode')
-    .version('1.1.1')
+    .version('1.1.2')
     .description('The newest anime steaming CLI');
 
 program

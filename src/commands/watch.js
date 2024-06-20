@@ -192,15 +192,19 @@ async function episodeMenu(currentEpisodeId) {
     switch (action) {
         case 'Next Episode':
             await navigateEpisode(currentEpisodeId, 1);
+            currentEpisodeId += 1;
             break;
         case 'Previous Episode':
             await navigateEpisode(currentEpisodeId, -1);
+            currentEpisodeId -= 1;
             break;
         case 'Download':
             await downloadEpisode(currentEpisodeId);
             break;
         case 'Save Episode':
-            const episodeNumber = currentEpisode.title.match(/\d+/)[0];
+            let episodeNumber = parseInt(currentEpisodeId.split('-').pop());
+            // make it a string again
+            episodeNumber = episodeNumber.toString();
             animeList.save(currentAnime.name, episodeNumber, currentEpisode.url);
             console.log('Episode saved to anime list.');
             await promptReturnToMenu();
@@ -269,33 +273,69 @@ async function navigateEpisode(currentEpisodeId, direction) {
     }
 }
 
+const sanitizeFileName = (name) => {
+    // Replace any problematic characters with an underscore or remove them
+    return name.replace(/[:<>?"|*\/\\]/g, '_');
+};
+
 async function downloadEpisode(currentEpisodeId) {
     try {
+        // API call to fetch video data
         const response = await axios.get(`${config.api}/anime/gogoanime/watch/${currentEpisodeId}`, {
             params: { server: 'gogocdn' }
         });
+        //console.log('API response received:', response.data);
 
+        // Extract video URL
         const videoUrl = findVideoUrl(response.data.sources);
+        //console.log('Extracted video URL:', videoUrl);
         if (!videoUrl) {
             console.log('No video found.');
             await promptReturnToMenu();
             return;
         }
 
+        // ask if the user wants to download the video
+        const { confirmDownload } = await inquirer.prompt({
+            type: 'confirm',
+            name: 'confirmDownload',
+            message: 'Do you want to download this episode?'
+        });
+
+        if (!confirmDownload) {
+            console.log('Download cancelled.');
+            await promptReturnToMenu();
+            return;
+        }
+        console.clear();
+        // Sanitize directory name
+        const sanitizedAnimeName = sanitizeFileName(currentAnime.name);
+        //console.log('Sanitized Anime Name:', sanitizedAnimeName);
+
+        // Define file paths
         const videosPath = path.join(os.homedir(), 'Videos');
-        const animePath = path.join(videosPath, currentAnime.name);
-        const outputFilePath = path.join(animePath, `${currentAnime.name} - ${currentEpisode.title}.mp4`);
+        const animePath = path.join(videosPath, sanitizedAnimeName);
+        const outputFilePath = path.join(animePath, `${sanitizedAnimeName} - ${sanitizeFileName(currentEpisode.title)}.mp4`);
+        //console.log('Paths:', { videosPath, animePath, outputFilePath });
+        if (!fs.existsSync(videosPath)) {
+            fs.mkdirSync(videosPath, { recursive: true });
+            // do not log the path as it may contain sensitive information
+            console.log('Created directory:', videosPath);
+        }
 
         if (!fs.existsSync(animePath)) {
             fs.mkdirSync(animePath, { recursive: true });
+            console.log(`Created directory: ${animePath}`);
         }
-
         await convertUrlToMp4(videoUrl, outputFilePath);
-        console.log(`Downloaded to ${outputFilePath}`);
+
+        console.log(`Episode saved to: ${outputFilePath}`);
         await promptReturnToMenu();
         await episodeMenu(currentEpisodeId);
+
     } catch (error) {
-        console.error('Error downloading episode:', error.message);
+        console.error('Error encountered:', error.message);
+        console.error('Full error details:', error);
     }
 }
 
