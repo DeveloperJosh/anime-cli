@@ -1,3 +1,14 @@
+const originalEmitWarning = process.emitWarning;
+
+process.emitWarning = (warning, ...args) => {
+  if (typeof warning === 'string' && warning.startsWith('DeprecationWarning')) {
+    // Suppress specific deprecation warnings
+    return;
+  }
+  originalEmitWarning(warning, ...args);
+};
+
+
 import inquirer from 'inquirer';
 // color console output
 import chalk from 'chalk';
