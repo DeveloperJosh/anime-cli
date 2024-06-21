@@ -49,11 +49,21 @@ async function displayMenu() {
             type: 'list',
             name: 'action',
             message: 'Select an option:',
-            choices: ['Search', 'View History', 'List Manager', 'New Anime', 'Exit']
+            choices: ['Search', 'Help', 'View History', 'List Manager', 'New Anime', 'Exit']
         });
 
         if (action === 'Search') {
             await selectAnime();
+        } else if (action === 'Help') {
+            console.clear();
+            console.log(chalk.bgBlueBright('Help Menu:')); 
+            console.log('Search: Search for an anime to watch');
+            console.log('Help: Display this help menu');
+            console.log('View History: View the history of watched episodes');
+            console.log('List Manager: Manage your anime list (This is separate from the history and this menu)');
+            console.log('New Anime: Fetch the newest anime releases');
+            console.log('Exit: Exit the program');
+            await promptReturnToMenu();
         } else if (action === 'New Anime') {
             await fetchNewestAnime();
         } else if (action === 'List Manager') {
