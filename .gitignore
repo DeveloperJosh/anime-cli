@@ -3,7 +3,7 @@ node_modules/
 /src/utils/fetchVideoStreams.js
 *.py
 
-test-^.*\.js$
+test.js
 
 # Logs
 logs

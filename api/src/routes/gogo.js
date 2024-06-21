@@ -9,7 +9,7 @@ dotenv.config();
 const router = Router();
 const baseUrl = process.env.BASE_URL;
 
-router.get('/api/:animeName', async (req, res) => {
+router.get('/:animeName', async (req, res) => {
     const animeName = req.params.animeName;
     const encodedAnimeName = encodeURIComponent(animeName);
 
@@ -36,12 +36,12 @@ router.get('/api/:animeName', async (req, res) => {
     }
 });
 
-router.get('/api/:animeName/episode/:episodeNumber', async (req, res) => {
+router.get('/:animeName/episode/:episodeNumber', async (req, res) => {
     const animeName = req.params.animeName;
     const episodeNumber = req.params.episodeNumber;
 
     try {
-        console.log(`DEBUG: Fetching episode sources for ${animeName} episode ${episodeNumber}`);
+       // console.log(`DEBUG: Fetching episode sources for ${animeName} episode ${episodeNumber}`);
         const episodeSources = await getEpisodeSources(animeName, episodeNumber);
         res.json(episodeSources);
     } catch (error) {

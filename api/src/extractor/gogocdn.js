@@ -13,6 +13,15 @@ const keys = {
     iv: CryptoJS.enc.Utf8.parse(process.env.CRYPTO_IV),
 };
 
+function validateEnvVars() {
+    if (!baseUrl) throw new Error('BASE_URL is not defined in the environment variables');
+    if (!keys.key) throw new Error('CRYPTO_KEY is not defined in the environment variables');
+    if (!keys.secondKey) throw new Error('CRYPTO_SECOND_KEY is not defined in the environment variables');
+    if (!keys.iv) throw new Error('CRYPTO_IV is not defined in the environment variables');
+}
+
+validateEnvVars();
+
 // Function to get the iframe source URL for a given episode
 async function getIframeSrc(episode) {
     try {
@@ -20,7 +29,7 @@ async function getIframeSrc(episode) {
         episode = episode.replace(':', '');
 
         // Check for cached iframe URL
-        const cachedIframeSrc = getCache(episode);
+        const cachedIframeSrc = await getCache(episode);
         if (cachedIframeSrc) {
             //console.log('Using cached iframe URL:', cachedIframeSrc);
             return cachedIframeSrc;
@@ -28,7 +37,7 @@ async function getIframeSrc(episode) {
 
         // Construct the URL and fetch the page
         const url = `${baseUrl}${episode}`;
-        console.log('Fetching episode URL:', url);
+        //console.log('Fetching episode URL:', url);
         const { data: html } = await axios.get(url);
         
         // Load the HTML and find the iframe source
@@ -37,7 +46,7 @@ async function getIframeSrc(episode) {
 
         // Cache the iframe source URL
         if (iframeSrc) {
-            setCache(episode, iframeSrc);
+            await setCache(episode, iframeSrc);
         }
 
         return iframeSrc;
@@ -49,87 +58,107 @@ async function getIframeSrc(episode) {
 
 // Function to generate encrypted parameters for an AJAX request
 async function generateEncryptedAjaxParams($, id) {
-    const encryptedKey = CryptoJS.AES.encrypt(id, keys.key, { iv: keys.iv }).toString();
-    const scriptValue = $("script[data-name='episode']").attr('data-value');
-    const decryptedToken = CryptoJS.AES.decrypt(scriptValue, keys.key, { iv: keys.iv }).toString(CryptoJS.enc.Utf8);
+    try {
+        const encryptedKey = CryptoJS.AES.encrypt(id, keys.key, { iv: keys.iv }).toString();
+        const scriptValue = $("script[data-name='episode']").attr('data-value');
+        const decryptedToken = CryptoJS.AES.decrypt(scriptValue, keys.key, { iv: keys.iv }).toString(CryptoJS.enc.Utf8);
 
-    return `id=${encryptedKey}&alias=${id}&${decryptedToken}`;
+        return `id=${encryptedKey}&alias=${id}&${decryptedToken}`;
+    } catch (error) {
+        console.error('Error generating encrypted AJAX parameters:', error);
+        throw new Error('Failed to generate encrypted AJAX parameters');
+    }
 }
 
 // Function to decrypt AJAX data
 async function decryptAjaxData(encryptedData) {
-    const decryptedData = CryptoJS.AES.decrypt(encryptedData, keys.secondKey, { iv: keys.iv }).toString(CryptoJS.enc.Utf8);
-    return JSON.parse(decryptedData);
+    try {
+        const decryptedData = CryptoJS.AES.decrypt(encryptedData, keys.secondKey, { iv: keys.iv }).toString(CryptoJS.enc.Utf8);
+        return JSON.parse(decryptedData);
+    } catch (error) {
+        console.error('Error decrypting AJAX data:', error);
+        throw new Error('Failed to decrypt AJAX data');
+    }
 }
 
 // Function to extract video URLs from a video URL
 async function extractVideoUrls(videoUrl) {
-    // Check if the video URL is cached
-    const cachedSources = getCache(videoUrl.href);
-    if (cachedSources) {
-        //console.log('Using cached video URLs for:', videoUrl.href);
-        return cachedSources;
-    }
+    try {
+        // Check if the video URL is cached
+        const cachedSources = await getCache(videoUrl.href);
+        if (cachedSources) {
+          //  console.log('Using cached video URLs for:', videoUrl.href);
+            return cachedSources;
+        }
 
-    // Fetch the video page and parse the HTML
-    const res = await axios.get(videoUrl.href);
-    const $ = load(res.data);
+        // Fetch the video page and parse the HTML
+        const res = await axios.get(videoUrl.href);
+        const $ = load(res.data);
 
-    // Generate encrypted AJAX parameters
-    const encryptedParams = await generateEncryptedAjaxParams($, videoUrl.searchParams.get('id') || '');
-    const encryptedData = await axios.get(`${videoUrl.protocol}//${videoUrl.hostname}/encrypt-ajax.php?${encryptedParams}`, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    });
-
-    // Decrypt the data to get the video sources
-    const decryptedData = await decryptAjaxData(encryptedData.data.data);
-    if (!decryptedData.source) throw new Error('No source found. Try a different server.');
-
-    const sources = [];
-    if (decryptedData.source[0].file.includes('.m3u8')) {
-        const resResult = await axios.get(decryptedData.source[0].file.toString());
-        const resolutions = resResult.data.match(/(RESOLUTION=)(.*)(\s*?)(\s*.*)/g);
-        resolutions.forEach(res => {
-            const index = decryptedData.source[0].file.lastIndexOf('/');
-            const quality = res.split('\n')[0].split('x')[1].split(',')[0];
-            const url = decryptedData.source[0].file.slice(0, index);
-            sources.push({
-                url: url + '/' + res.split('\n')[1],
-                isM3U8: (url + res.split('\n')[1]).includes('.m3u8'),
-                quality: quality + 'p'
-            });
+        // Generate encrypted AJAX parameters
+        const encryptedParams = await generateEncryptedAjaxParams($, videoUrl.searchParams.get('id') || '');
+        const encryptedData = await axios.get(`${videoUrl.protocol}//${videoUrl.hostname}/encrypt-ajax.php?${encryptedParams}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
-    } else {
-        decryptedData.source.forEach(source => {
+
+        // Decrypt the data to get the video sources
+        const decryptedData = await decryptAjaxData(encryptedData.data.data);
+        if (!decryptedData.source) throw new Error('No source found. Try a different server.');
+
+        const sources = [];
+        if (decryptedData.source[0].file.includes('.m3u8')) {
+            const resResult = await axios.get(decryptedData.source[0].file.toString());
+            const resolutions = resResult.data.match(/(RESOLUTION=)(.*)(\s*?)(\s*.*)/g);
+            resolutions.forEach(res => {
+                const index = decryptedData.source[0].file.lastIndexOf('/');
+                const quality = res.split('\n')[0].split('x')[1].split(',')[0];
+                const url = decryptedData.source[0].file.slice(0, index);
+                sources.push({
+                    url: url + '/' + res.split('\n')[1],
+                    isM3U8: (url + res.split('\n')[1]).includes('.m3u8'),
+                    quality: quality + 'p'
+                });
+            });
+        } else {
+            decryptedData.source.forEach(source => {
+                sources.push({
+                    url: source.file,
+                    isM3U8: source.file.includes('.m3u8'),
+                    quality: source.label.split(' ')[0] + 'p'
+                });
+            });
+        }
+
+        decryptedData.source_bk.forEach(source => {
             sources.push({
                 url: source.file,
                 isM3U8: source.file.includes('.m3u8'),
-                quality: source.label.split(' ')[0] + 'p'
+                quality: 'backup'
             });
         });
+
+        // Cache the video sources
+        await setCache(videoUrl.href, sources);
+
+        return sources;
+    } catch (error) {
+        console.error('Error extracting video URLs:', error);
+        throw new Error('Failed to extract video URLs');
     }
-
-    decryptedData.source_bk.forEach(source => {
-        sources.push({
-            url: source.file,
-            isM3U8: source.file.includes('.m3u8'),
-            quality: 'backup'
-        });
-    });
-
-    // Cache the video sources
-    setCache(videoUrl.href, sources);
-
-    return sources;
 }
 
 // Function to get video sources for a specific anime episode
 async function getEpisodeSources(name, episode) {
-    const anime = `${name}-episode-${episode}`;
-    const iframeSrc = await getIframeSrc(anime);
-    const videoUrl = new URL(iframeSrc);
-    const videoSources = await extractVideoUrls(videoUrl);
-    return videoSources;
+    try {
+        const anime = `${name}-episode-${episode}`;
+        const iframeSrc = await getIframeSrc(anime);
+        const videoUrl = new URL(iframeSrc);
+        const videoSources = await extractVideoUrls(videoUrl);
+        return videoSources;
+    } catch (error) {
+        console.error('Error getting episode sources:', error);
+        throw new Error('Failed to get episode sources');
+    }
 }
 
 export default getEpisodeSources;
