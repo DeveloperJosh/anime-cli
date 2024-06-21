@@ -52,7 +52,11 @@ function handleError(error) {
     // if erorr message - Could not connect then ingore it
     if (error.message === 'Could not connect') {
         return;
-    } else {
+    } // if time out then try again
+    else if (error.message === 'RPC_CONNECTION_TIMEOUT') {
+        rpc.login({ clientId }).catch(handleError);
+    } 
+    else {
     console.error(`An error occurred: ${error.message}`);
     // Optionally, you can perform additional error handling here, such as retrying or logging to a file.
     }

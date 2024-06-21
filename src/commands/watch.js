@@ -255,6 +255,8 @@ async function episodeMenu(currentEpisodeId) {
             await episodeMenu(currentEpisodeId);
             break;
         case 'Return to main menu':
+            console.clear();
+            console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
             await displayMenu();
             break;
     }

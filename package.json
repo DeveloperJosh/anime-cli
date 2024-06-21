@@ -7,6 +7,10 @@
   "repository": "https://github.com/DeveloperJosh/anime-cli",
   "homepage": "https://github.com/DeveloperJosh/anime-cli#readme",
   "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/main.js"
+  },
   "bin": {
     "nekonode": "src/main.js"
   },
