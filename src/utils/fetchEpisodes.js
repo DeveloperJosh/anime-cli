@@ -1,13 +1,13 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const ora = require('ora');
+import axios from 'axios';
+import { load } from 'cheerio';
+import ora from 'ora';
 
 async function fetchEpisodes(animeUrl) {
     const spinner = ora('Fetching episodes...').start();
     try {
         // Fetch the HTML content of the anime page to get the movie ID and anime name
         const response = await axios.get(animeUrl);
-        const $ = cheerio.load(response.data);
+        const $ = load(response.data);
 
         // Extract the movie ID
         const movieId = $('input#movie_id').val();
@@ -39,7 +39,7 @@ async function fetchEpisodes(animeUrl) {
         }
 
         // Load the HTML from the API response
-        const $api = cheerio.load(apiResponse.data);
+        const $api = load(apiResponse.data);
 
         // Extract episodes from the API response
         const episodes = [];
@@ -79,4 +79,4 @@ async function fetchEpisodes(animeUrl) {
     }
 };
 
-module.exports = fetchEpisodes;
+export default fetchEpisodes;

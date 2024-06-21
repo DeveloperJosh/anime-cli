@@ -1,9 +1,10 @@
-const RPC = require('discord-rpc');
+import pkg from 'discord-rpc';
+const { register, Client } = pkg;
 const clientId = '1252150069982007398';
 
-RPC.register(clientId);
+register(clientId);
 
-const rpc = new RPC.Client({ transport: 'ipc' });
+const rpc = new Client({ transport: 'ipc' });
 
 const setRichPresence = (details, state, startTimestamp, largeImageKey, largeImageText, smallImageKey, smallImageText) => {
     try {
@@ -48,8 +49,13 @@ rpc.on('ready', () => {
 rpc.login({ clientId }).catch(handleError);
 
 function handleError(error) {
+    // if erorr message - Could not connect then ingore it
+    if (error.message === 'Could not connect') {
+        return;
+    } else {
     console.error(`An error occurred: ${error.message}`);
     // Optionally, you can perform additional error handling here, such as retrying or logging to a file.
+    }
 }
 
-module.exports = setRichPresence;
+export default setRichPresence;

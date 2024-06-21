@@ -1,5 +1,5 @@
-const ffmpeg = require('fluent-ffmpeg');
-const ora = require('ora');
+import ffmpeg from 'fluent-ffmpeg';
+import ora from 'ora';
 
 function convertUrlToMp4(m3u8Url, outputPath) {
     return new Promise((resolve, reject) => {
@@ -43,4 +43,4 @@ function convertUrlToMp4(m3u8Url, outputPath) {
     });
 }
 
-module.exports = convertUrlToMp4;
+export default convertUrlToMp4;

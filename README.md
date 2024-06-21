@@ -40,7 +40,7 @@ I built NekoNode using Node.js, and I used the following libraries:
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/en/)
+- [Node.js](https://nodejs.org/en/) I recommend using the latest LTS version.
 
 - [MPV](https://mpv.io/)
 

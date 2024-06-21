@@ -1,21 +1,24 @@
-const inquirer = require('inquirer');
-const chalk = require('chalk');
-const figlet = require('figlet');
-const axios = require('axios');
-const Table = require('cli-table3');
-const { exec } = require('child_process');
-const os = require('node:os');
-const path = require('node:path');
-const fs = require('node:fs');
-const fetchAnime = require('../utils/fetchAnime');
-const fetchEpisodes = require('../utils/fetchEpisodes');
-const History = require('../utils/history');
-const playVideo = require('../utils/player');
-const configLoader = require('../utils/configLoader');
-const AnimeList = require('../utils/animelist');
-const convertUrlToMp4 = require('../utils/downloader');
-const listAnime = require('./list');
-const setRichPresence = require('../utils/discord');
+import inquirer from 'inquirer';
+// color console output
+import chalk from 'chalk';
+import readline from 'node:readline';
+import axios from 'axios';
+import Table from 'cli-table3';
+import { exec } from 'child_process';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { existsSync, mkdirSync } from 'node:fs';
+
+import fetchAnime from '../utils/fetchAnime.js';
+import fetchEpisodes from '../utils/fetchEpisodes.js';
+import History from '../utils/history.js';
+import playVideo from '../utils/player.js';
+import configLoader from '../utils/configLoader.js';
+import AnimeList from '../utils/animelist.js';
+import convertUrlToMp4 from '../utils/downloader.js';
+import listAnime from './list.js';
+import fetchNewestAnime from './new.js';
+import setRichPresence from '../utils/discord.js';
 
 const config = configLoader();
 const history = new History();
@@ -26,9 +29,10 @@ let currentEpisode = null;
 
 async function watchAnime() {
     console.clear();
-    console.log(chalk.magenta(figlet.textSync('NekoNode Watcher!')));
-    
-    // check config for player and then check if it is installed
+    // add a background color to the console
+    console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
+
+    // Check config for player and then check if it is installed
     exec(`${config.player} --version`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${config.player} is not installed. Please install ${config.player} and try again.`);
@@ -45,15 +49,26 @@ async function displayMenu() {
             type: 'list',
             name: 'action',
             message: 'Select an option:',
-            choices: ['Search', 'View History', 'List Manager', 'Exit']
+            choices: ['Search', 'Help', 'View History', 'List Manager', 'New Anime', 'Exit']
         });
 
         if (action === 'Search') {
             await selectAnime();
+        } else if (action === 'Help') {
+            console.clear();
+            console.log(chalk.bgBlueBright('Help Menu:')); 
+            console.log('Search: Search for an anime to watch');
+            console.log('Help: Display this help menu');
+            console.log('View History: View the history of watched episodes');
+            console.log('List Manager: Manage your anime list (This is separate from the history and this menu)');
+            console.log('New Anime: Fetch the newest anime releases');
+            console.log('Exit: Exit the program');
+            await promptReturnToMenu();
+        } else if (action === 'New Anime') {
+            await fetchNewestAnime();
         } else if (action === 'List Manager') {
             await listAnime();
-        }
-        else if (action === 'View History') {
+        } else if (action === 'View History') {
             await viewHistory();
         } else if (action === 'Exit') {
             console.log('Exiting...');
@@ -65,14 +80,14 @@ async function displayMenu() {
 async function viewHistory() {
     const historyList = history.getHistory();
     if (historyList.length === 0) {
-        console.log(chalk.yellow('No history found.'));
+        console.log('No history found.');
         await promptReturnToMenu();
         return;
     }
 
-    console.info(chalk.blue.bold('\nHistory:'));
+    console.info('\nHistory:');
     const table = new Table({
-        head: [chalk.bold('Anime Name'), chalk.bold('Episode'), chalk.bold('Link')],
+        head: ['Anime Name', 'Episode', 'Link'],
         colWidths: [30, 10, 50],
         style: { head: ['cyan'], border: ['grey'] }
     });
@@ -82,7 +97,7 @@ async function viewHistory() {
     });
 
     console.log(table.toString());
-    console.info(chalk.blue('\nEnd of History\n'));
+    console.info('\nEnd of History\n');
 
     await promptReturnToMenu();
 }
@@ -174,6 +189,8 @@ function findVideoUrl(sources) {
 
 async function episodeMenu(currentEpisodeId) {
     console.clear();
+    //console.log(`Current Anime: ${currentAnime.name}`);
+    console.log(chalk.bgBlueBright(`Current Episode: ${currentAnime.name}`));
     if (!currentEpisodeId) {
         console.log('Error: No episode ID provided.');
         return;
@@ -184,11 +201,12 @@ async function episodeMenu(currentEpisodeId) {
         name: 'action',
         message: 'Select an option:',
         choices: [
-            'Anime Info', 
-            'Download', 
-            'Save Episode', 
-            'Next Episode', 
-            'Previous Episode', 
+            'Next Episode',
+            'Previous Episode',
+            'Reply Episode',
+            'Anime Info',
+            'Download',
+            'Save To List',
             'Return to main menu'
         ]
     });
@@ -198,6 +216,9 @@ async function episodeMenu(currentEpisodeId) {
             await navigateEpisode(currentEpisodeId, 1);
             currentEpisodeId += 1;
             break;
+        case 'Reply Episode':
+            await navigateEpisode(currentEpisodeId, 0);
+            break;
         case 'Previous Episode':
             await navigateEpisode(currentEpisodeId, -1);
             currentEpisodeId -= 1;
@@ -205,10 +226,11 @@ async function episodeMenu(currentEpisodeId) {
         case 'Download':
             await downloadEpisode(currentEpisodeId);
             break;
-        case 'Save Episode':
+        case 'Save To List':
             let episodeNumber = parseInt(currentEpisodeId.split('-').pop());
-            // make it a string again
             episodeNumber = episodeNumber.toString();
+            //update currentEpisode.url to have the episode number
+            currentEpisode.url = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
             animeList.save(currentAnime.name, episodeNumber, currentEpisode.url);
             console.log('Episode saved to anime list.');
             await promptReturnToMenu();
@@ -221,13 +243,12 @@ async function episodeMenu(currentEpisodeId) {
             if (animeNameSlug.includes(':')) {
                 animeNameSlug = animeNameSlug.replace(':', '');
             }
-            // check for -(dub)
             if (animeNameSlug.includes('-(dub)')) {
                 animeNameSlug = animeNameSlug.replace('-(dub)', '');
             }
-            let url = `${config.api}/anime/gogoanime/info/${animeNameSlug}`
-            const response = await axios.get(url);
-            let animeInfo = response.data;
+            const infoUrl = `${config.api}/anime/gogoanime/info/${animeNameSlug}`;
+            const infoResponse = await axios.get(infoUrl);
+            let animeInfo = infoResponse.data;
             let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.releaseDate}\nType: ${animeInfo.type}\nDescription: ${animeInfo.description}`;
             console.log(text);
             await promptReturnToMenu();
@@ -278,28 +299,22 @@ async function navigateEpisode(currentEpisodeId, direction) {
 }
 
 const sanitizeFileName = (name) => {
-    // Replace any problematic characters with an underscore or remove them
     return name.replace(/[:<>?"|*\/\\]/g, '_');
 };
 
 async function downloadEpisode(currentEpisodeId) {
     try {
-        // API call to fetch video data
         const response = await axios.get(`${config.api}/anime/gogoanime/watch/${currentEpisodeId}`, {
             params: { server: 'gogocdn' }
         });
-        //console.log('API response received:', response.data);
 
-        // Extract video URL
         const videoUrl = findVideoUrl(response.data.sources);
-        //console.log('Extracted video URL:', videoUrl);
         if (!videoUrl) {
             console.log('No video found.');
             await promptReturnToMenu();
             return;
         }
 
-        // ask if the user wants to download the video
         const { confirmDownload } = await inquirer.prompt({
             type: 'confirm',
             name: 'confirmDownload',
@@ -312,23 +327,19 @@ async function downloadEpisode(currentEpisodeId) {
             return;
         }
         console.clear();
-        // Sanitize directory name
-        const sanitizedAnimeName = sanitizeFileName(currentAnime.name);
-        //console.log('Sanitized Anime Name:', sanitizedAnimeName);
 
-        // Define file paths
-        const videosPath = path.join(os.homedir(), 'Videos');
-        const animePath = path.join(videosPath, sanitizedAnimeName);
-        const outputFilePath = path.join(animePath, `${sanitizedAnimeName} - ${sanitizeFileName(currentEpisode.title)}.mp4`);
-        //console.log('Paths:', { videosPath, animePath, outputFilePath });
-        if (!fs.existsSync(videosPath)) {
-            fs.mkdirSync(videosPath, { recursive: true });
-            // do not log the path as it may contain sensitive information
+        const sanitizedAnimeName = sanitizeFileName(currentAnime.name);
+
+        const videosPath = join(homedir(), 'Videos');
+        const animePath = join(videosPath, sanitizedAnimeName);
+        const outputFilePath = join(animePath, `${sanitizedAnimeName} - ${sanitizeFileName(currentEpisode.title)}.mp4`);
+        if (!existsSync(videosPath)) {
+            mkdirSync(videosPath, { recursive: true });
             console.log('Created directory:', videosPath);
         }
 
-        if (!fs.existsSync(animePath)) {
-            fs.mkdirSync(animePath, { recursive: true });
+        if (!existsSync(animePath)) {
+            mkdirSync(animePath, { recursive: true });
             console.log(`Created directory: ${animePath}`);
         }
         await convertUrlToMp4(videoUrl, outputFilePath);
@@ -348,9 +359,10 @@ async function promptReturnToMenu() {
         type: 'input',
         name: 'back',
         message: 'Hit enter to go back'
-        // lock so no other input can be entered
     });
+
     console.clear();
+    console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
 }
 
-module.exports = watchAnime;
+export default watchAnime;

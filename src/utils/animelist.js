@@ -1,24 +1,24 @@
-const fs = require('node:fs');
-const yaml = require('js-yaml');
-const path = require('path');
-const os = require('os');
+import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { load, dump } from 'js-yaml';
+import { join, dirname } from 'path';
+import { homedir } from 'os';
 
 class AnimeList {
     constructor() {
         const isWindows = process.platform === 'win32';
         const configDir = isWindows
-            ? path.join(process.env.APPDATA, 'anime-cli')
-            : path.join(os.homedir(), '.anime-cli');
+            ? join(process.env.APPDATA, 'anime-cli')
+            : join(homedir(), '.anime-cli');
         
-        this.animeListFilePath = path.join(configDir, 'animeList.yml');
+        this.animeListFilePath = join(configDir, 'animeList.yml');
         this.animeList = this.loadAnimeList();
     }
 
     loadAnimeList() {
         try {
-            if (fs.existsSync(this.animeListFilePath)) {
-                const animeListFile = fs.readFileSync(this.animeListFilePath, 'utf8');
-                const loadedList = yaml.load(animeListFile) || {};
+            if (existsSync(this.animeListFilePath)) {
+                const animeListFile = readFileSync(this.animeListFilePath, 'utf8');
+                const loadedList = load(animeListFile) || {};
                 return loadedList;
             } else {
                 this.createAnimeListFile();
@@ -32,11 +32,11 @@ class AnimeList {
 
     createAnimeListFile() {
         try {
-            const animeListDir = path.dirname(this.animeListFilePath);
-            if (!fs.existsSync(animeListDir)) {
-                fs.mkdirSync(animeListDir, { recursive: true });
+            const animeListDir = dirname(this.animeListFilePath);
+            if (!existsSync(animeListDir)) {
+                mkdirSync(animeListDir, { recursive: true });
             }
-            fs.writeFileSync(this.animeListFilePath, '');
+            writeFileSync(this.animeListFilePath, '');
         } catch (error) {
             console.error(`Failed to create anime list file: ${error.message}`);
         }
@@ -51,6 +51,13 @@ class AnimeList {
         if (episodeExists) {
             return;
         }
+
+        // check if link already exists
+        const linkExists = this.animeList[animeName].some(ep => ep.link === link);
+        if (linkExists) {
+            return;
+        }
+
         this.animeList[animeName].push({ episode, link });
         this.saveAnimeList();
     }
@@ -71,12 +78,12 @@ class AnimeList {
 
     saveAnimeList() {
         try {
-            const yamlStr = yaml.dump(this.animeList, {
+            const yamlStr = dump(this.animeList, {
                 noRefs: true,
                 flowLevel: 2,
                 styles: { '!!null': 'null' }
             });
-            fs.writeFileSync(this.animeListFilePath, yamlStr);
+            writeFileSync(this.animeListFilePath, yamlStr);
         } catch (error) {
             console.error(`Failed to save anime list: ${error.message}`);
         }
@@ -100,4 +107,4 @@ class AnimeList {
     }
 }
 
-module.exports = AnimeList;
+export default AnimeList;
