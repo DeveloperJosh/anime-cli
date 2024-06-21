@@ -13,7 +13,7 @@ I built NekoNode using Node.js, and I used the following libraries:
 - [Chalk](https://www.npmjs.com/package/chalk) for styling the terminal output.
 - [Ora](https://www.npmjs.com/package/ora) for displaying loading spinners.
 - [Figlet](https://www.npmjs.com/package/figlet) for creating ASCII art from text.
-- [Consumet](https://github.com/consumet/api.consumet.org) I used this for fetching the streaming links for the anime. (Hosted on a secure server.)
+- [NekoNode-API](https://github.com/DeveloperJosh/nekonode-api) I used this for fetching the streaming links for the anime. (Hosted on a secure server.)
 
 
 ## Supported Platforms
