@@ -2,6 +2,7 @@ import inquirer from 'inquirer';
 // color console output
 import chalk from 'chalk';
 import readline from 'node:readline';
+import ora from 'ora';
 import axios from 'axios';
 import Table from 'cli-table3';
 import { exec } from 'child_process';
@@ -29,10 +30,8 @@ let currentEpisode = null;
 
 async function watchAnime() {
     console.clear();
-    // add a background color to the console
     console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
 
-    // Check config for player and then check if it is installed
     exec(`${config.player} --version`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${config.player} is not installed. Please install ${config.player} and try again.`);
@@ -52,36 +51,49 @@ async function displayMenu() {
             choices: ['Search', 'Help', 'View History', 'List Manager', 'New Anime', 'Exit']
         });
 
-        if (action === 'Search') {
-            await selectAnime();
-        } else if (action === 'Help') {
-            console.clear();
-            console.log(chalk.bgBlueBright('Help Menu:')); 
-            console.log('Search: Search for an anime to watch');
-            console.log('Help: Display this help menu');
-            console.log('View History: View the history of watched episodes');
-            console.log('List Manager: Manage your anime list (This is separate from the history and this menu)');
-            console.log('New Anime: Fetch the newest anime releases');
-            console.log('Exit: Exit the program');
-            await promptReturnToMenu();
-        } else if (action === 'New Anime') {
-            await fetchNewestAnime();
-        } else if (action === 'List Manager') {
-            await listAnime();
-        } else if (action === 'View History') {
-            await viewHistory();
-        } else if (action === 'Exit') {
-            console.log('Exiting...');
-            process.exit(0);
+        switch (action) {
+            case 'Search':
+                await selectAnime();
+                break;
+            case 'Help':
+                displayHelpMenu();
+                await promptReturnToMenu();
+                break;
+            case 'New Anime':
+                await fetchNewestAnime();
+                await promptReturnToMenu();
+                break;
+            case 'List Manager':
+                await listAnime();
+                await promptReturnToMenu();
+                break;
+            case 'View History':
+                await viewHistory();
+                await promptReturnToMenu();
+                break;
+            case 'Exit':
+                console.log('Exiting...');
+                process.exit(0);
+                break;
         }
     }
+}
+
+function displayHelpMenu() {
+    console.clear();
+    console.log(chalk.bgBlueBright('Help Menu:')); 
+    console.log('Search: Search for an anime to watch');
+    console.log('Help: Display this help menu');
+    console.log('View History: View the history of watched episodes');
+    console.log('List Manager: Manage your anime list');
+    console.log('New Anime: Fetch the newest anime releases');
+    console.log('Exit: Exit the program');
 }
 
 async function viewHistory() {
     const historyList = history.getHistory();
     if (historyList.length === 0) {
         console.log('No history found.');
-        await promptReturnToMenu();
         return;
     }
 
@@ -98,8 +110,6 @@ async function viewHistory() {
 
     console.log(table.toString());
     console.info('\nEnd of History\n');
-
-    await promptReturnToMenu();
 }
 
 async function selectAnime() {
@@ -113,7 +123,6 @@ async function selectAnime() {
         const animeResults = await fetchAnime(animeName);
         if (animeResults.length === 0) {
             console.log('No anime found.');
-            await promptReturnToMenu();
             return;
         }
 
@@ -136,7 +145,6 @@ async function selectEpisode() {
         const episodeData = await fetchEpisodes(currentAnime.url);
         if (!episodeData || episodeData.episodes.length === 0) {
             console.log('No episodes found.');
-            await promptReturnToMenu();
             return;
         }
 
@@ -155,12 +163,15 @@ async function selectEpisode() {
         const videoUrl = findVideoUrl(response.data.sources);
         if (!videoUrl) {
             console.log('No video URL found for the selected episode.');
-            await promptReturnToMenu();
             return;
         }
 
         history.save(currentAnime.name, episodeChoice.title, episodeChoice.url, videoUrl);
+        // start a loading spinner
+
+        const spinner = ora('Loading video...').start();
         playVideo(videoUrl, currentAnime.name, episodeChoice.title);
+        spinner.stop();
 
         currentEpisode = episodeChoice;
         setRichPresence(
@@ -180,88 +191,57 @@ async function selectEpisode() {
 }
 
 function findVideoUrl(sources) {
-    let videoUrl = sources.find(source => source.quality === '1080p')?.url;
-    if (!videoUrl) {
-        videoUrl = sources.find(source => source.quality === 'backup')?.url;
-    }
-    return videoUrl;
+    return sources.find(source => source.quality === '1080p')?.url || sources.find(source => source.quality === 'backup')?.url;
 }
 
 async function episodeMenu(currentEpisodeId) {
-    console.clear();
-    //console.log(`Current Anime: ${currentAnime.name}`);
-    console.log(chalk.bgBlueBright(`Current Episode: ${currentAnime.name}`));
-    if (!currentEpisodeId) {
-        console.log('Error: No episode ID provided.');
-        return;
+    while (true) {
+        console.clear();
+        console.log(chalk.bgBlueBright(`Current Episode: ${currentAnime.name}`));
+        if (!currentEpisodeId) {
+            console.log('Error: No episode ID provided.');
+            return;
+        }
+
+        const { action } = await inquirer.prompt({
+            type: 'list',
+            name: 'action',
+            message: 'Select an option:',
+            choices: [
+                'Next Episode',
+                'Previous Episode',
+                'Replay Episode',
+                'Anime Info',
+                'Download',
+                'Save To List',
+                'Return to main menu'
+            ]
+        });
+
+        switch (action) {
+            case 'Next Episode':
+                currentEpisodeId = await navigateEpisode(currentEpisodeId, 1);
+                break;
+            case 'Replay Episode':
+                await navigateEpisode(currentEpisodeId, 0);
+                break;
+            case 'Previous Episode':
+                currentEpisodeId = await navigateEpisode(currentEpisodeId, -1);
+                break;
+            case 'Download':
+                await downloadEpisode(currentEpisodeId);
+                break;
+            case 'Save To List':
+                saveEpisodeToList(currentEpisodeId);
+                await promptReturnToMenu();
+                break;
+            case 'Anime Info':
+                await showAnimeInfo(currentAnime.name);
+                break;
+            case 'Return to main menu':
+                return; // Exit the episode menu loop
+        }
     }
-
-    const { action } = await inquirer.prompt({
-        type: 'list',
-        name: 'action',
-        message: 'Select an option:',
-        choices: [
-            'Next Episode',
-            'Previous Episode',
-            'Reply Episode',
-            'Anime Info',
-            'Download',
-            'Save To List',
-            'Return to main menu'
-        ]
-    });
-
-    switch (action) {
-        case 'Next Episode':
-            await navigateEpisode(currentEpisodeId, 1);
-            currentEpisodeId += 1;
-            break;
-        case 'Reply Episode':
-            await navigateEpisode(currentEpisodeId, 0);
-            break;
-        case 'Previous Episode':
-            await navigateEpisode(currentEpisodeId, -1);
-            currentEpisodeId -= 1;
-            break;
-        case 'Download':
-            await downloadEpisode(currentEpisodeId);
-            break;
-        case 'Save To List':
-            let episodeNumber = parseInt(currentEpisodeId.split('-').pop());
-            episodeNumber = episodeNumber.toString();
-            //update currentEpisode.url to have the episode number
-            currentEpisode.url = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
-            animeList.save(currentAnime.name, episodeNumber, currentEpisode.url);
-            console.log('Episode saved to anime list.');
-            await promptReturnToMenu();
-            await episodeMenu(currentEpisodeId);
-            break;
-        case 'Anime Info':
-            console.clear();
-            let name = currentAnime.name;
-            let animeNameSlug = name.toLowerCase().replace(/\s/g, '-');
-            if (animeNameSlug.includes(':')) {
-                animeNameSlug = animeNameSlug.replace(':', '');
-            }
-            if (animeNameSlug.includes('-(dub)')) {
-                animeNameSlug = animeNameSlug.replace('-(dub)', '');
-            }
-            const infoUrl = `${config.api}/anime/gogoanime/info/${animeNameSlug}`;
-            const infoResponse = await axios.get(infoUrl);
-            let animeInfo = infoResponse.data;
-            let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.releaseDate}\nType: ${animeInfo.type}\nDescription: ${animeInfo.description}`;
-            console.log(text);
-            await promptReturnToMenu();
-            await episodeMenu(currentEpisodeId);
-            break;
-        case 'Return to main menu':
-            console.clear();
-            console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
-            await displayMenu();
-            break;
-    }
-
-    await episodeMenu(currentEpisodeId);
 }
 
 async function navigateEpisode(currentEpisodeId, direction) {
@@ -277,8 +257,7 @@ async function navigateEpisode(currentEpisodeId, direction) {
         const videoUrl = findVideoUrl(response.data.sources);
         if (!videoUrl) {
             console.log('No more episodes found.');
-            await promptReturnToMenu();
-            return;
+            return currentEpisodeId; // Stay on current episode
         }
 
         const link = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
@@ -294,15 +273,12 @@ async function navigateEpisode(currentEpisodeId, direction) {
             'Active'
         );
 
-        await episodeMenu(nextEpisodeId);
+        return nextEpisodeId;
     } catch (error) {
         console.error('Error navigating episodes:', error.message);
+        return currentEpisodeId; // Stay on current episode
     }
 }
-
-const sanitizeFileName = (name) => {
-    return name.replace(/[:<>?"|*\/\\]/g, '_');
-};
 
 async function downloadEpisode(currentEpisodeId) {
     try {
@@ -313,7 +289,6 @@ async function downloadEpisode(currentEpisodeId) {
         const videoUrl = findVideoUrl(response.data.sources);
         if (!videoUrl) {
             console.log('No video found.');
-            await promptReturnToMenu();
             return;
         }
 
@@ -325,7 +300,6 @@ async function downloadEpisode(currentEpisodeId) {
 
         if (!confirmDownload) {
             console.log('Download cancelled.');
-            await promptReturnToMenu();
             return;
         }
         console.clear();
@@ -347,13 +321,58 @@ async function downloadEpisode(currentEpisodeId) {
         await convertUrlToMp4(videoUrl, outputFilePath);
 
         console.log(`Episode saved to: ${outputFilePath}`);
-        await promptReturnToMenu();
-        await episodeMenu(currentEpisodeId);
-
     } catch (error) {
         console.error('Error encountered:', error.message);
-        console.error('Full error details:', error);
     }
+}
+
+function saveEpisodeToList(currentEpisodeId) {
+    console.log('Saving episode to list...');
+    console.log('Current Episode ID:', currentEpisodeId);
+
+    // Check if currentEpisodeId is valid
+    if (!currentEpisodeId) {
+        console.error('Invalid episode ID.');
+        return;
+    }
+
+    let episodeNumber = parseInt(currentEpisodeId.split('-').pop());
+    console.log('Parsed Episode Number:', episodeNumber);
+
+    // Check if currentAnime and currentEpisode are set
+    if (!currentAnime || !currentAnime.name) {
+        console.error('No current anime selected.');
+        return;
+    }
+
+    if (!currentEpisode || !currentEpisode.title) {
+        console.error('No current episode selected.');
+        return;
+    }
+
+    const episodeUrl = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
+    console.log('Constructed Episode URL:', episodeUrl);
+
+    // Update the current episode's URL
+    currentEpisode.url = episodeUrl;
+
+    try {
+        animeList.save(currentAnime.name, episodeNumber.toString(), currentEpisode.url);
+        console.log(`Episode "${currentEpisode.title}" of anime "${currentAnime.name}" saved to anime list.`);
+    } catch (error) {
+        console.error('Error saving to anime list:', error.message);
+    }
+}
+
+async function showAnimeInfo(animeName) {
+    console.clear();
+    let animeNameSlug = animeName.toLowerCase().replace(/\s/g, '-').replace(':', '').replace('-(dub)', '');
+    const infoUrl = `${config.api}/anime/gogoanime/info/${animeNameSlug}`;
+    const infoResponse = await axios.get(infoUrl);
+    let animeInfo = infoResponse.data;
+    let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.releaseDate}\nType: ${animeInfo.type}\nDescription: ${animeInfo.description}`;
+    console.log(text);
+    await promptReturnToMenu();
 }
 
 async function promptReturnToMenu() {
@@ -362,9 +381,12 @@ async function promptReturnToMenu() {
         name: 'back',
         message: 'Hit enter to go back'
     });
-
     console.clear();
     console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
 }
+
+const sanitizeFileName = (name) => {
+    return name.replace(/[:<>?"|*\/\\]/g, '_');
+};
 
 export default watchAnime;

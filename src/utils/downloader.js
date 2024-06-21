@@ -26,7 +26,7 @@ function convertUrlToMp4(m3u8Url, outputPath) {
                 if (progress.percent !== undefined) {
                     spinner.text = `Downloading... ${progress.percent.toFixed(2)}% done`;
                 } else {
-                    console.log('Processing: progress information not available');
+                    console.log('Processing: progress information not available, Trying to download...');
                 }
             })
             .on('end', () => {
