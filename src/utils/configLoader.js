@@ -23,7 +23,7 @@ function loadConfig() {
         }
         
         // Create a default config file
-        writeFileSync(configFile, `player: mpv # We suggest to use mpv as vlc sometimes doesn't work\nbaseUrl: https://gogoanime3.co\napi: https://api.nekonode.net # DO NOT EDIT\nLang: NA # Set to SUB/DUB if you want to only watch SUB/DUB, Set back to NA for all\n`);
+        writeFileSync(configFile, `player: mpv # We suggest to use mpv as vlc sometimes doesn't work\nbaseUrl: https://gogoanime3.co\napi: https://nekonode-api.sziwyz.easypanel.host # DO NOT EDIT\nLang: NA # Set to SUB/DUB if you want to only watch SUB/DUB, Set back to NA for all\n`);
         process.exit(1);
     }
     return config;

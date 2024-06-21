@@ -1,7 +1,5 @@
 import inquirer from 'inquirer';
-// color console output
 import chalk from 'chalk';
-import readline from 'node:readline';
 import ora from 'ora';
 import axios from 'axios';
 import Table from 'cli-table3';
@@ -161,6 +159,7 @@ async function selectEpisode() {
       //  });
         const response = await axios.get(`${config.api}/api/watch/${episodeId}`);
 
+
         const videoUrl = findVideoUrl(response.data);
         if (!videoUrl) {
             console.log('No video URL found for the selected episode.');
@@ -168,7 +167,6 @@ async function selectEpisode() {
         }
 
         history.save(currentAnime.name, episodeChoice.title, episodeChoice.url, videoUrl);
-        // start a loading spinner
 
         const spinner = ora('Loading video...').start();
         playVideo(videoUrl, currentAnime.name, episodeChoice.title);
@@ -252,11 +250,13 @@ async function navigateEpisode(currentEpisodeId, direction) {
         let episodeNumber = parseInt(currentEpisodeId.split('-').pop()) + direction;
         const nextEpisodeId = `${basePart}${episodeNumber}`;
 
-        const response = await axios.get(`${config.api}/anime/gogoanime/watch/${nextEpisodeId}`, {
-            params: { server: 'gogocdn' }
-        });
+       // const response = await axios.get(`${config.api}/anime/gogoanime/watch/${nextEpisodeId}`, {
+       //     params: { server: 'gogocdn' }
+       // });
 
-        const videoUrl = findVideoUrl(response.data.sources);
+        const response = await axios.get(`${config.api}/api/watch/${nextEpisodeId}`);
+
+        const videoUrl = findVideoUrl(response.data);
         if (!videoUrl) {
             console.log('No more episodes found.');
             return currentEpisodeId; // Stay on current episode
@@ -284,11 +284,13 @@ async function navigateEpisode(currentEpisodeId, direction) {
 
 async function downloadEpisode(currentEpisodeId) {
     try {
-        const response = await axios.get(`${config.api}/anime/gogoanime/watch/${currentEpisodeId}`, {
-            params: { server: 'gogocdn' }
-        });
+        //const response = await axios.get(`${config.api}/anime/gogoanime/watch/${currentEpisodeId}`, {
+        //    params: { server: 'gogocdn' }
+       // });
 
-        const videoUrl = findVideoUrl(response.data.sources);
+        const response = await axios.get(`${config.api}/api/watch/${currentEpisodeId}`);
+
+        const videoUrl = findVideoUrl(response.data);
         if (!videoUrl) {
             console.log('No video found.');
             return;
