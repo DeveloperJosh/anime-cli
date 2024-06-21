@@ -1,4 +1,16 @@
 #!/usr/bin/env node
+
+// Suppress deprecation warnings
+const originalEmitWarning = process.emitWarning;
+
+process.emitWarning = (warning, ...args) => {
+  if (typeof warning === 'string' && warning.startsWith('DeprecationWarning')) {
+    // Suppress specific deprecation warnings
+    return;
+  }
+  originalEmitWarning(warning, ...args);
+};
+
 import { Command } from 'commander';
 import watchAnime from './commands/watch.js';
 import listAnime from './commands/list.js';

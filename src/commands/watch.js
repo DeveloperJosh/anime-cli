@@ -1,7 +1,7 @@
 import inquirer from 'inquirer';
 // color console output
 import chalk from 'chalk';
-import figlet from 'figlet';
+import readline from 'node:readline';
 import axios from 'axios';
 import Table from 'cli-table3';
 import { exec } from 'child_process';
