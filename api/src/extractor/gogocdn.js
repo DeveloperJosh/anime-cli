@@ -148,10 +148,10 @@ async function extractVideoUrls(videoUrl) {
 }
 
 // Function to get video sources for a specific anime episode
-async function getEpisodeSources(name, episode) {
+async function getEpisodeSources(name) {
     try {
-        const anime = `${name}-episode-${episode}`;
-        const iframeSrc = await getIframeSrc(anime);
+        //const anime = `${name}-episode-${episode}`;
+        const iframeSrc = await getIframeSrc(name);
         const videoUrl = new URL(iframeSrc);
         const videoSources = await extractVideoUrls(videoUrl);
         return videoSources;

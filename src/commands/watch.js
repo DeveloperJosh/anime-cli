@@ -156,11 +156,12 @@ async function selectEpisode() {
         });
 
         const episodeId = episodeChoice.url.split('/').pop();
-        const response = await axios.get(`${config.api}/anime/gogoanime/watch/${episodeId}`, {
-            params: { server: 'gogocdn' }
-        });
+       // const response = await axios.get(`${config.api}/anime/gogoanime/watch/${episodeId}`, {
+        //    params: { server: 'gogocdn' }
+      //  });
+        const response = await axios.get(`${config.api}/api/watch/${episodeId}`);
 
-        const videoUrl = findVideoUrl(response.data.sources);
+        const videoUrl = findVideoUrl(response.data);
         if (!videoUrl) {
             console.log('No video URL found for the selected episode.');
             return;
@@ -191,7 +192,8 @@ async function selectEpisode() {
 }
 
 function findVideoUrl(sources) {
-    return sources.find(source => source.quality === '1080p')?.url || sources.find(source => source.quality === 'backup')?.url;
+    return sources.find(source => source.quality === '1080p')?.url || 
+           sources.find(source => source.quality === 'backup')?.url;
 }
 
 async function episodeMenu(currentEpisodeId) {

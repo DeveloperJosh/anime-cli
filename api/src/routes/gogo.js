@@ -36,13 +36,13 @@ router.get('/:animeName', async (req, res) => {
     }
 });
 
-router.get('/:animeName/episode/:episodeNumber', async (req, res) => {
-    const animeName = req.params.animeName;
-    const episodeNumber = req.params.episodeNumber;
+router.get('/watch/:episode', async (req, res) => {
+    // watch/remonster-episode-2
+    const episode = req.params.episode;
 
     try {
        // console.log(`DEBUG: Fetching episode sources for ${animeName} episode ${episodeNumber}`);
-        const episodeSources = await getEpisodeSources(animeName, episodeNumber);
+        const episodeSources = await getEpisodeSources(episode);
         res.json(episodeSources);
     } catch (error) {
         res.status(500).json({ error: 'Failed to retrieve episode sources' });
