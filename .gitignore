@@ -4,7 +4,6 @@ node_modules/
 *.py
 DiscordRPC.js
 
-bun.*
 
 # Logs
 logs
