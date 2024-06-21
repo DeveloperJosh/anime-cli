@@ -264,6 +264,7 @@ async function navigateEpisode(currentEpisodeId, direction) {
 
         const link = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
         history.save(currentAnime.name, `EP ${episodeNumber}`, link, videoUrl);
+        currentEpisode = { title: `EP ${episodeNumber}`, url: link };
         playVideo(videoUrl, currentAnime.name, `Episode ${episodeNumber}`);
         setRichPresence(
             `Watching ${currentAnime.name} - Episode ${episodeNumber}`,
@@ -287,7 +288,7 @@ async function downloadEpisode(currentEpisodeId) {
         //const response = await axios.get(`${config.api}/anime/gogoanime/watch/${currentEpisodeId}`, {
         //    params: { server: 'gogocdn' }
        // });
-
+        //console.log(currentEpisodeId);
         const response = await axios.get(`${config.api}/api/watch/${currentEpisodeId}`);
 
         const videoUrl = findVideoUrl(response.data);
@@ -309,6 +310,7 @@ async function downloadEpisode(currentEpisodeId) {
         console.clear();
 
         const sanitizedAnimeName = sanitizeFileName(currentAnime.name);
+        //console.log(`Downloading episode "${currentEpisode.title}" of anime "${currentAnime.name}"...`);
 
         const videosPath = join(homedir(), 'Videos');
         const animePath = join(videosPath, sanitizedAnimeName);
@@ -323,8 +325,8 @@ async function downloadEpisode(currentEpisodeId) {
             console.log(`Created directory: ${animePath}`);
         }
         await convertUrlToMp4(videoUrl, outputFilePath);
-
-        console.log(`Episode saved to: ${outputFilePath}`);
+        console.log('File:', outputFilePath);
+        await promptReturnToMenu();
     } catch (error) {
         console.error('Error encountered:', error.message);
     }
@@ -371,10 +373,10 @@ function saveEpisodeToList(currentEpisodeId) {
 async function showAnimeInfo(animeName) {
     console.clear();
     let animeNameSlug = animeName.toLowerCase().replace(/\s/g, '-').replace(':', '').replace('-(dub)', '');
-    const infoUrl = `${config.api}/anime/gogoanime/info/${animeNameSlug}`;
+    const infoUrl = `${config.api}/api/info/${animeNameSlug}`;
     const infoResponse = await axios.get(infoUrl);
     let animeInfo = infoResponse.data;
-    let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.releaseDate}\nType: ${animeInfo.type}\nDescription: ${animeInfo.description}`;
+    let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.released}\nDescription: ${animeInfo.description}`;
     console.log(text);
     await promptReturnToMenu();
 }

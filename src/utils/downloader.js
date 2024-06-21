@@ -31,7 +31,7 @@ function convertUrlToMp4(m3u8Url, outputPath) {
             })
             .on('end', () => {
                 spinner.succeed('Download and conversion complete.');
-                console.log('Conversion complete.');
+                //console.log('Conversion complete.');
                 resolve();
             })
             .on('error', (err) => {
