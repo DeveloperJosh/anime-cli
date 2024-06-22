@@ -18,6 +18,7 @@ import convertUrlToMp4 from '../utils/downloader.js';
 import listAnime from './list.js';
 import fetchNewestAnime from './new.js';
 import setRichPresence from '../utils/discord.js';
+//import fs from 'node:fs';
 
 const config = configLoader();
 const history = new History();
@@ -157,6 +158,7 @@ async function selectEpisode() {
        // const response = await axios.get(`${config.api}/anime/gogoanime/watch/${episodeId}`, {
         //    params: { server: 'gogocdn' }
       //  });
+        //fs.writeFileSync('test.json', JSON.stringify(`${config.api}/api/watch/${episodeId}`));
         const response = await axios.get(`${config.api}/api/watch/${episodeId}`);
 
 
