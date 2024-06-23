@@ -14,7 +14,7 @@ const history = new History();
 const program = new Command();
 program
     .name('NekoNode')
-    .version('1.1.4')
+    .version('1.1.5')
     .description('The newest anime steaming CLI');
 
 program

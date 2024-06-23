@@ -1,6 +1,6 @@
 {
   "name": "nekonode",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "nekonode is a CLI tool to search and watch anime",
   "type": "module",
   "main": "src/main.js",
