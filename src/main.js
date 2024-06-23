@@ -7,6 +7,8 @@ import fetchNewestAnime from './commands/new.js';
 import History from './utils/history.js';
 import Table from 'cli-table3';
 import chalk from 'chalk';
+import { join } from 'path';
+import { homedir } from 'os';
 const history = new History();
 
 const program = new Command();
@@ -34,7 +36,13 @@ program
     .command('config')
     .description('This will give you the path to the config file.')
     .action(() => {
-        console.log(`${process.env.APPDATA}/anime-cli/config.yml`);
+        // linux support
+        const isWindows = process.platform === 'win32';
+        const configDir = isWindows
+            ? join(process.env.APPDATA, 'anime-cli')
+            : join(homedir(), '.anime-cli');
+        console.log(`Config file path: ${configDir}`);
+        process.exit(0);
     });
 
 program

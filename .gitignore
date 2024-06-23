@@ -2,8 +2,8 @@
 node_modules/
 /src/utils/fetchVideoStreams.js
 *.py
-DiscordRPC.js
-/api
+
+test.js
 
 # Logs
 logs
