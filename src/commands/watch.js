@@ -18,7 +18,7 @@ import convertUrlToMp4 from '../utils/downloader.js';
 import listAnime from './list.js';
 import fetchNewestAnime from './new.js';
 import setRichPresence from '../utils/discord.js';
-//import fs from 'node:fs';
+import fs from 'node:fs';
 
 const config = configLoader();
 const history = new History();
@@ -161,8 +161,9 @@ async function selectEpisode() {
         //fs.writeFileSync('test.json', JSON.stringify(`${config.api}/api/watch/${episodeId}`));
         const response = await axios.get(`${config.api}/api/watch/${episodeId}`);
 
-
+        //fs.writeFileSync('test.json', JSON.stringify(response.data));
         const videoUrl = findVideoUrl(response.data);
+        //fs.writeFileSync('url.json', JSON.stringify(response.data));
         if (!videoUrl) {
             console.log('No video URL found for the selected episode.');
             return;
@@ -192,8 +193,14 @@ async function selectEpisode() {
 }
 
 function findVideoUrl(sources) {
-    return sources.find(source => source.quality === '1080p')?.url || 
-           sources.find(source => source.quality === 'backup')?.url;
+    // Find 1080p quality video URL
+    const highestQuality = sources.find(source => source.quality === '1080p');
+    
+    // Find backup quality video URL
+    const backupQuality = sources.find(source => source.quality === 'backup');
+    
+    // Return 1080p URL if available, otherwise return backup URL
+    return highestQuality ? highestQuality.source : backupQuality ? backupQuality.source : null;
 }
 
 async function episodeMenu(currentEpisodeId) {
