@@ -206,7 +206,7 @@ function findVideoUrl(sources) {
 async function episodeMenu(currentEpisodeId) {
     while (true) {
         console.clear();
-        console.log(chalk.bgBlueBright(`Current Episode: ${currentAnime.name}`));
+        console.log(chalk.bgBlueBright(`Current Episode: ${currentAnime.name} - ${currentEpisode.title}`));
         if (!currentEpisodeId) {
             console.log('Error: No episode ID provided.');
             return;
