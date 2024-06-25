@@ -393,7 +393,7 @@ async function showAnimeInfo(animeName) {
     .replace(/-+$/, '');
 
     const infoUrl = `${config.api}/api/info/${animeNameSlug}`;    
-    fs.writeFileSync('test.json', JSON.stringify(infoUrl));
+    //fs.writeFileSync('test.json', JSON.stringify(infoUrl));
     const infoResponse = await axios.get(infoUrl);
     let animeInfo = infoResponse.data;
     let text = `Title: ${animeInfo.title}\nTotal Episodes: ${animeInfo.totalEpisodes}\nGenres: ${animeInfo.genres.join(', ')}\nStatus: ${animeInfo.status}\nRelease Date: ${animeInfo.released}\nDescription: ${animeInfo.description}`;
