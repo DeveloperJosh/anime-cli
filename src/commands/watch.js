@@ -220,7 +220,8 @@ async function episodeMenu(currentEpisodeId) {
             choices: [
                 'Next Episode',
                 'Previous Episode',
-                'Replay Episode',
+              ///  'Replay Episode',
+                'Choose Episode',
                 'Anime Info',
                 'Download',
                 'Save To List',
@@ -232,12 +233,15 @@ async function episodeMenu(currentEpisodeId) {
             case 'Next Episode':
                 currentEpisodeId = await navigateEpisode(currentEpisodeId, 1);
                 break;
-            case 'Replay Episode':
-                await navigateEpisode(currentEpisodeId, 0);
-                break;
+          //  case 'Replay Episode':
+          //      await navigateEpisode(currentEpisodeId, 0);
+          //      break;
             case 'Previous Episode':
                 currentEpisodeId = await navigateEpisode(currentEpisodeId, -1);
                 break;
+            case 'Choose Episode':
+                await selectEpisode();
+                return; // Exit the episode menu loop
             case 'Download':
                 await downloadEpisode(currentEpisodeId);
                 break;
