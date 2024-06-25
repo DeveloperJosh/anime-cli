@@ -373,7 +373,7 @@ function saveEpisodeToList(currentEpisodeId) {
     currentEpisode.url = episodeUrl;
 
     try {
-        animeList.save(currentAnime.name, episodeNumber.toString(), currentEpisode.url);
+        animeList.save(currentAnime.name, episodeNumber.toString(),episodeUrl);
         console.log(`Episode "${currentEpisode.title}" of anime "${currentAnime.name}" saved to anime list.`);
     } catch (error) {
         console.error('Error saving to anime list:', error.message);
