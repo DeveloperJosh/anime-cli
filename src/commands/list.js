@@ -19,20 +19,20 @@ async function listAnime() {
         type: 'list',
         name: 'animeListName',
         message: 'Select an option:',
-        choices: ['Get', 'Add', 'Remove', 'Exit']
+        choices: ['View list', 'Add to list', 'Remove from list', 'Exit']
     });
 
     switch (animeListName) {
         case 'Exit':
             console.log('Exiting...');
             process.exit(0);
-        case 'Get':
+        case 'View list':
             await handleGetAnime(animeListNames);
             break;
-        case 'Add':
+        case 'Add to list':
             await handleAddAnime();
             break;
-        case 'Remove':
+        case 'Remove from list':
             await handleRemoveAnime(animeListNames);
             break;
     }

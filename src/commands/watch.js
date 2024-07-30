@@ -28,7 +28,6 @@ let currentEpisode = null;
 async function watchAnime() {
     console.clear();
     console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
-    console.log(chalk.bgBlueBright('Please make sure you update the cli and remove the old config file.'));
 
     exec(`${config.player} --version`, (error, stdout, stderr) => {
         if (error) {
