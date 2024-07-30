@@ -1,6 +1,6 @@
 import AnimeList from '../utils/animelist.js';
-import inquirer from 'inquirer';  // Correctly import inquirer
-import chalk from 'chalk';  // Correctly import chalk
+import inquirer from 'inquirer';
+import chalk from 'chalk'; 
 import ora from 'ora';
 import configLoader from '../utils/configLoader.js';
 

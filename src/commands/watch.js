@@ -7,7 +7,6 @@ import { exec } from 'child_process';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
-
 import fetchAnime from '../utils/fetchAnime.js';
 import fetchEpisodes from '../utils/fetchEpisodes.js';
 import History from '../utils/history.js';
@@ -18,7 +17,6 @@ import convertUrlToMp4 from '../utils/downloader.js';
 import listAnime from './list.js';
 import fetchNewestAnime from './new.js';
 import setRichPresence from '../utils/discord.js';
-import fs from 'node:fs';
 
 const config = configLoader();
 const history = new History();
