@@ -71,7 +71,6 @@ async function displayMenu() {
             case 'Exit':
                 console.log('Exiting...');
                 process.exit(0);
-                break;
         }
     }
 }
