@@ -366,7 +366,8 @@ function saveEpisodeToList(currentEpisodeId) {
         return;
     }
 
-    const episodeUrl = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
+    ///const episodeUrl = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
+    const episodeUrl = `https://nekonode.net/anime/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}?ep=${episodeNumber}`;
     console.log('Constructed Episode URL:', episodeUrl);
 
     // Update the current episode's URL
