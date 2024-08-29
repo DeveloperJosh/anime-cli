@@ -1,6 +1,6 @@
 import AnimeList from '../utils/animelist.js';
-import inquirer from 'inquirer';  // Correctly import inquirer
-import chalk from 'chalk';  // Correctly import chalk
+import inquirer from 'inquirer';
+import chalk from 'chalk'; 
 import ora from 'ora';
 import configLoader from '../utils/configLoader.js';
 
@@ -19,20 +19,20 @@ async function listAnime() {
         type: 'list',
         name: 'animeListName',
         message: 'Select an option:',
-        choices: ['Get', 'Add', 'Remove', 'Exit']
+        choices: ['View list', 'Add to list', 'Remove from list', 'Exit']
     });
 
     switch (animeListName) {
         case 'Exit':
             console.log('Exiting...');
             process.exit(0);
-        case 'Get':
+        case 'View list':
             await handleGetAnime(animeListNames);
             break;
-        case 'Add':
+        case 'Add to list':
             await handleAddAnime();
             break;
-        case 'Remove':
+        case 'Remove from list':
             await handleRemoveAnime(animeListNames);
             break;
     }

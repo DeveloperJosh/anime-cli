@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { load } from 'cheerio';
 import loadConfig from '../utils/configLoader.js';
 import ora from 'ora';
 import Table from 'cli-table3';
@@ -7,41 +6,33 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import watchAnime from './watch.js';
 
-// Load configuration using the configLoader utility
 const config = loadConfig();
 
 async function fetchNewestAnime() {
     console.clear();
     const spinner = ora('Fetching newest anime...').start();
-    const newAnimeUrl = `${config.baseUrl}/`;
+    const newAnimeUrl = `${config.api}/api/latest`;
 
     try {
-        // Make a GET request to fetch the latest anime data
         const response = await axios.get(newAnimeUrl);
-        const $ = load(response.data);
-        const animeList = [];
+        const animeList = response.data;
 
-        // Parse the HTML to extract anime information
-        $('.last_episodes .items li').each((_, element) => {
-            const animeElement = $(element);
-            const animeName = animeElement.find('.name a').attr('title').trim();
-            const episodeUrl = animeElement.find('.name a').attr('href');
-            const episodeNumber = animeElement.find('.episode').text().trim();
-            const imgUrl = animeElement.find('.img a img').attr('src');
+        console.clear();
 
-            animeList.push({
-                name: animeName,
-                episode: episodeNumber,
-                url: `${config.baseUrl}${episodeUrl}`,
-               // img: imgUrl
-            });
-        });
-
-        // Stop the spinner once the data is fetched and processed
-        spinner.stop();
-
+        /*
+        how the data is structured:
+        [
+            {
+                name: 'title',
+                encodedName: 'encodedTitle',
+                lang: 'sub',
+                image: 'imageLink',
+                url: 'animeLink'
+            }
+        ]
+        */
         console.info(chalk.cyanBright.bold('\nNewest Anime Releases:\n'));
-        
+
         // Determine the maximum length of anime names
         const maxNameLength = Math.max(...animeList.map(anime => anime.name.length), 10);
 
@@ -57,21 +48,20 @@ async function fetchNewestAnime() {
         });
 
         animeList.forEach(anime => {
+            let url = anime.url;
+            // Extract the episode number from the URL
+            let episodeMatch = url.match(/(?:episode-)(\d+)/i);
+            let episodeNumber = episodeMatch ? episodeMatch[1] : 'N/A';
             table.push([
                 chalk.blueBright(anime.name), 
-                chalk.yellowBright(anime.episode)
+                chalk.yellowBright(episodeNumber)
             ]);
         });
 
         console.log(table.toString());
-        
-        // Display anime URLs with color
-      //  animeList.forEach(anime => {
-        //    console.log(`${chalk.magenta('Watch here:')} ${chalk.underline.cyan(anime.url)}`);
-       // });
+    
+        spinner.stop();
 
-        // Exit the process successfully
-        // back to the main menu
         await inquirer.prompt([
             {
                 type: 'input',
@@ -80,7 +70,7 @@ async function fetchNewestAnime() {
             }
         ]);
         console.clear();
-        console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
+        //console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
         await watchAnime();
     } catch (error) {
         // Handle errors and stop the spinner if an error occurs

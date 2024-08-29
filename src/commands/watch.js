@@ -7,7 +7,6 @@ import { exec } from 'child_process';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
-
 import fetchAnime from '../utils/fetchAnime.js';
 import fetchEpisodes from '../utils/fetchEpisodes.js';
 import History from '../utils/history.js';
@@ -18,7 +17,6 @@ import convertUrlToMp4 from '../utils/downloader.js';
 import listAnime from './list.js';
 import fetchNewestAnime from './new.js';
 import setRichPresence from '../utils/discord.js';
-import fs from 'node:fs';
 
 const config = configLoader();
 const history = new History();
@@ -30,7 +28,6 @@ let currentEpisode = null;
 async function watchAnime() {
     console.clear();
     console.log(chalk.bgBlueBright('Welcome to NekoNode Watcher!'));
-    console.log(chalk.bgBlueBright('Please make sure you update the cli and remove the old config file.'));
 
     exec(`${config.player} --version`, (error, stdout, stderr) => {
         if (error) {
@@ -74,7 +71,6 @@ async function displayMenu() {
             case 'Exit':
                 console.log('Exiting...');
                 process.exit(0);
-                break;
         }
     }
 }
@@ -370,7 +366,8 @@ function saveEpisodeToList(currentEpisodeId) {
         return;
     }
 
-    const episodeUrl = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
+    ///const episodeUrl = `${config.baseUrl}/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}-episode-${episodeNumber}`;
+    const episodeUrl = `https://nekonode.net/anime/${currentAnime.name.replace(/\s/g, '-').toLowerCase()}?ep=${episodeNumber}`;
     console.log('Constructed Episode URL:', episodeUrl);
 
     // Update the current episode's URL
