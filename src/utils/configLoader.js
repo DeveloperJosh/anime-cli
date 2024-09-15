@@ -12,7 +12,7 @@ function loadConfig() {
     const configFile = join(configDir, 'config.yml');
 
     // Default configuration
-    const defaultConfigContent = `player: mpv # We suggest to use mpv as vlc sometimes doesn't work\nbaseUrl: https://gogoanime3.co\napi: https://api.nekonode.net # DO NOT EDIT\nLang: NA # Set to SUB/DUB if you want to only watch SUB/DUB, Set back to NA for all\nproxy: https://node-proxy.5yg3y1.easypanel.host`;
+    const defaultConfigContent = `player: mpv # We suggest to use mpv as vlc sometimes doesn't work\nbaseUrl: https://gogoanime3.co\napi: https://api.nekonode.net # DO NOT EDIT\nLang: NA # Set to SUB/DUB if you want to only watch SUB/DUB, Set back to NA for all\nproxy: https://proxy.mail-hook.com`;
 
     if (!existsSync(configFile)) {
         console.log('Config file not found, creating a default config file...');

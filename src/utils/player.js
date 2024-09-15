@@ -5,7 +5,7 @@ const config = loadConfig();
 
 // Function to play video using MPV or VLC based on config
 function playEpisode(episodeUrl, player, animeName, episode) {
-    const proxy_url = `${config.proxy}/fetch/m3u8?url=${episodeUrl}`;
+    const proxy_url = `${config.proxy}/fetch?url=${episodeUrl}`;
 
     const playerOptions = {
         mpv: [
